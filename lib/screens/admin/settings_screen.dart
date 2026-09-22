@@ -7,6 +7,7 @@ import '../../models/shop_settings.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/settings_provider.dart';
 import '../../services/storage_service.dart';
+import 'categories_manage_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -219,6 +220,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     labelText: 'UPI ID', hintText: 'shopname@upi'),
               ),
               const SizedBox(height: 8),
+              const SizedBox(height: 8),
               SwitchListTile(
                 contentPadding: EdgeInsets.zero,
                 title: const Text('Shop Open'),
@@ -228,7 +230,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 value: _isOpen,
                 onChanged: (v) => setState(() => _isOpen = v),
               ),
-              const SizedBox(height: 16),
+              const Divider(height: 32),
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: const Icon(Icons.category, color: Colors.blueGrey),
+                title: const Text('Manage Categories'),
+                subtitle: const Text('Add or edit product categories'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const CategoriesManageScreen()),
+                ),
+              ),
+              const Divider(height: 32),
               ElevatedButton(
                 onPressed: _saving ? null : _save,
                 child: _saving
@@ -258,3 +272,4 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 }
+

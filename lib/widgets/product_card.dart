@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import '../core/formatters.dart';
 import '../models/product.dart';
@@ -38,7 +39,7 @@ class ProductCard extends StatelessWidget {
                 product.name,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                style: GoogleFonts.mandali(fontWeight: FontWeight.bold, fontSize: 16, height: 1.2),
               ),
               if (product.unit.isNotEmpty)
                 Text(

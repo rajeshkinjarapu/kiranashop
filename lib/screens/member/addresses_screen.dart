@@ -29,64 +29,100 @@ class _AddressesScreenState extends State<AddressesScreen> {
 
     final saved = await showDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(address == null ? 'Add Address' : 'Edit Address'),
-        content: Form(
-          key: formKey,
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextFormField(
-                  controller: labelCtrl,
-                  decoration: const InputDecoration(labelText: 'Label (Home/Work)'),
-                ),
-                TextFormField(
-                  controller: line1Ctrl,
-                  decoration: const InputDecoration(labelText: 'Address line 1'),
-                  validator: (v) =>
-                      (v?.trim().isEmpty ?? true) ? 'Required' : null,
-                ),
-                TextFormField(
-                  controller: line2Ctrl,
-                  decoration: const InputDecoration(labelText: 'Address line 2'),
-                ),
-                TextFormField(
-                  controller: landmarkCtrl,
-                  decoration: const InputDecoration(labelText: 'Landmark'),
-                ),
-                TextFormField(
-                  controller: pincodeCtrl,
-                  keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(labelText: 'Pincode'),
-                ),
-              ],
+      builder: (ctx) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        elevation: 16,
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Form(
+            key: formKey,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.blue.shade50,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(Icons.location_on, color: Colors.blue.shade700, size: 28),
+                      ),
+                      const SizedBox(width: 16),
+                      Text(
+                        address == null ? 'Add Address' : 'Edit Address',
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+                  _buildAddressField(labelCtrl, 'Label (e.g. Home, Work)', Icons.label_outline),
+                  const SizedBox(height: 16),
+                  _buildAddressField(line1Ctrl, 'House/Flat No. & Building', Icons.home_outlined, 
+                      validator: (v) => (v?.trim().isEmpty ?? true) ? 'Required' : null),
+                  const SizedBox(height: 16),
+                  _buildAddressField(line2Ctrl, 'Area, Street, Village', Icons.map_outlined),
+                  const SizedBox(height: 16),
+                  _buildAddressField(landmarkCtrl, 'Landmark (Optional)', Icons.place_outlined),
+                  const SizedBox(height: 16),
+                  _buildAddressField(pincodeCtrl, 'Pincode', Icons.pin_drop_outlined, isNumber: true),
+                  const SizedBox(height: 32),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(ctx, false),
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                          foregroundColor: Colors.black54,
+                        ),
+                        child: const Text('Cancel', style: TextStyle(fontSize: 16)),
+                      ),
+                      const SizedBox(width: 12),
+                      ElevatedButton(
+                        onPressed: () async {
+                          if (!formKey.currentState!.validate()) return;
+                          final newAddress = Address(
+                            id: address?.id ?? '',
+                            label: labelCtrl.text.trim(),
+                            line1: line1Ctrl.text.trim(),
+                            line2: line2Ctrl.text.trim(),
+                            landmark: landmarkCtrl.text.trim(),
+                            pincode: pincodeCtrl.text.trim(),
+                            isDefault: address?.isDefault ?? false,
+                          );
+                          await _firestore.saveAddress(userId, newAddress,
+                              id: address?.id.isEmpty == true ? null : address?.id);
+                          if (ctx.mounted) Navigator.pop(ctx, true);
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.blue.shade700,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: const Text('Save', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
         ),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('Cancel')),
-          TextButton(
-            onPressed: () async {
-              if (!formKey.currentState!.validate()) return;
-              final newAddress = Address(
-                id: address?.id ?? '',
-                label: labelCtrl.text.trim(),
-                line1: line1Ctrl.text.trim(),
-                line2: line2Ctrl.text.trim(),
-                landmark: landmarkCtrl.text.trim(),
-                pincode: pincodeCtrl.text.trim(),
-                isDefault: address?.isDefault ?? false,
-              );
-              await _firestore.saveAddress(userId, newAddress,
-                  id: address?.id.isEmpty == true ? null : address?.id);
-              if (ctx.mounted) Navigator.pop(ctx, true);
-            },
-            child: const Text('Save'),
-          ),
-        ],
       ),
     );
 
@@ -98,16 +134,43 @@ class _AddressesScreenState extends State<AddressesScreen> {
     if (saved == true && mounted) setState(() {});
   }
 
+  Widget _buildAddressField(TextEditingController controller, String label, IconData icon, {String? Function(String?)? validator, bool isNumber = false}) {
+    return TextFormField(
+      controller: controller,
+      keyboardType: isNumber ? TextInputType.number : TextInputType.text,
+      textCapitalization: TextCapitalization.words,
+      decoration: InputDecoration(
+        labelText: label,
+        filled: true,
+        fillColor: Colors.grey.shade50,
+        prefixIcon: Icon(icon, color: Colors.blueGrey),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.grey.shade300),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.grey.shade300),
+        ),
+      ),
+      validator: validator,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final userId = context.watch<AuthProvider>().user?.id;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('My Addresses')),
+      backgroundColor: Colors.grey.shade50,
+      appBar: AppBar(
+        title: const Text('My Addresses', style: TextStyle(fontWeight: FontWeight.bold)),
+        centerTitle: true,
+      ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _editAddress(),
         icon: const Icon(Icons.add),
-        label: const Text('Add Address'),
+        label: const Text('Add Address', style: TextStyle(fontWeight: FontWeight.bold)),
       ),
       body: userId == null
           ? const SizedBox.shrink()
@@ -115,38 +178,76 @@ class _AddressesScreenState extends State<AddressesScreen> {
               stream: _firestore.addressesStream(userId),
               builder: (context, snapshot) {
                 final addresses = snapshot.data ?? [];
-                if (addresses.isEmpty) {
+                if (addresses.isEmpty && snapshot.connectionState == ConnectionState.active) {
                   return const EmptyState(
                     icon: Icons.location_off_outlined,
                     title: 'No saved addresses',
                     subtitle: 'Add an address for faster checkout',
                   );
                 }
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
                 return ListView.separated(
                   padding: const EdgeInsets.all(16),
                   itemCount: addresses.length,
-                  separatorBuilder: (_, _) => const SizedBox(height: 10),
+                  separatorBuilder: (_, _) => const SizedBox(height: 16),
                   itemBuilder: (context, i) {
                     final a = addresses[i];
                     return Card(
-                      child: ListTile(
-                        leading: const Icon(Icons.location_on_outlined),
-                        title: Text(a.label,
-                            style:
-                                const TextStyle(fontWeight: FontWeight.bold)),
-                        subtitle: Text(a.fullText),
-                        trailing: PopupMenuButton<String>(
-                          onSelected: (v) async {
-                            if (v == 'edit') {
-                              await _editAddress(address: a);
-                            } else if (v == 'delete') {
-                              await _firestore.deleteAddress(userId, a.id);
-                            }
-                          },
-                          itemBuilder: (_) => const [
-                            PopupMenuItem(value: 'edit', child: Text('Edit')),
-                            PopupMenuItem(
-                                value: 'delete', child: Text('Delete')),
+                      elevation: 2,
+                      shadowColor: Colors.black12,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        side: BorderSide(color: Colors.grey.shade200),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: Colors.blue.shade50,
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Icon(
+                                    a.label.toLowerCase() == 'home' ? Icons.home : (a.label.toLowerCase() == 'work' ? Icons.work : Icons.location_on),
+                                    color: Colors.blue.shade700,
+                                    size: 20,
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(
+                                    a.label,
+                                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                                  ),
+                                ),
+                                PopupMenuButton<String>(
+                                  onSelected: (v) async {
+                                    if (v == 'edit') {
+                                      await _editAddress(address: a);
+                                    } else if (v == 'delete') {
+                                      await _firestore.deleteAddress(userId, a.id);
+                                    }
+                                  },
+                                  itemBuilder: (_) => const [
+                                    PopupMenuItem(value: 'edit', child: Text('Edit')),
+                                    PopupMenuItem(value: 'delete', child: Text('Delete', style: TextStyle(color: Colors.red))),
+                                  ],
+                                  icon: const Icon(Icons.more_vert, color: Colors.grey),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              a.fullText,
+                              style: const TextStyle(fontSize: 14, color: Colors.black87, height: 1.4),
+                            ),
                           ],
                         ),
                       ),

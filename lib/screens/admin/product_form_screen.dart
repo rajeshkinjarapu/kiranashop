@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 
 import '../../models/category.dart';
 import '../../models/product.dart';
+import 'categories_manage_screen.dart';
 import '../../providers/product_provider.dart';
 import '../../services/firestore_service.dart';
 import '../../services/storage_service.dart';
@@ -185,15 +186,55 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                     (v?.trim().isEmpty ?? true) ? 'Enter product name' : null,
               ),
               const SizedBox(height: 12),
-              DropdownButtonFormField<Category>(
-                initialValue: _selectedCategory,
-                decoration: const InputDecoration(labelText: 'Category'),
-                items: categories
-                    .map((c) =>
-                        DropdownMenuItem(value: c, child: Text(c.name)))
-                    .toList(),
-                onChanged: (c) => setState(() => _selectedCategory = c),
-                validator: (v) => v == null ? 'Select a category' : null,
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: categories.isEmpty
+                        ? Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+                            decoration: BoxDecoration(
+                              color: Colors.amber.shade50,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: Colors.amber.shade200),
+                            ),
+                            child: const Text(
+                              'No categories available. Please add one first.',
+                              style: TextStyle(color: Colors.brown, fontSize: 14),
+                            ),
+                          )
+                        : DropdownButtonFormField<Category>(
+                            initialValue: _selectedCategory,
+                            decoration: const InputDecoration(labelText: 'Category'),
+                            items: categories
+                                .map((c) =>
+                                    DropdownMenuItem(value: c, child: Text(c.name)))
+                                .toList(),
+                            onChanged: (c) => setState(() => _selectedCategory = c),
+                            validator: (v) => v == null ? 'Select a category' : null,
+                          ),
+                  ),
+                  const SizedBox(width: 12),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.blue.shade50,
+                        shape: BoxShape.circle,
+                      ),
+                      child: IconButton(
+                        icon: const Icon(Icons.add, color: Colors.blue),
+                        tooltip: 'Manage Categories',
+                        onPressed: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const CategoriesManageScreen(),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 12),
               Row(

@@ -4,6 +4,7 @@ import '../core/constants.dart';
 import '../models/address.dart';
 import '../models/app_user.dart';
 import '../models/category.dart';
+import '../models/katha_transaction.dart';
 import '../models/offer.dart';
 import '../models/order_model.dart';
 import '../models/product.dart';
@@ -49,6 +50,51 @@ class FirestoreService {
       .collection(AppConstants.usersCollection)
       .doc(userId)
       .update({'name': name});
+
+  Stream<List<AppUser>> membersStream() => _db
+      .collection(AppConstants.usersCollection)
+      .where('role', isEqualTo: AppConstants.roleMember)
+      .orderBy('createdAt', descending: true)
+      .snapshots()
+      .map((s) => s.docs.map(AppUser.fromDoc).toList());
+
+  // ---------- Katha Book (Ledger) ----------
+
+  Stream<List<KathaTransaction>> kathaStream(String userId) => _db
+      .collection(AppConstants.usersCollection)
+      .doc(userId)
+      .collection('katha_transactions')
+      .orderBy('createdAt', descending: true)
+      .snapshots()
+      .map((s) => s.docs.map(KathaTransaction.fromDoc).toList());
+
+  Future<void> addKathaTransaction(
+      String userId, KathaTransaction transaction) async {
+    final userRef = _db.collection(AppConstants.usersCollection).doc(userId);
+    final kathaRef = userRef.collection('katha_transactions').doc();
+
+    await _db.runTransaction((tx) async {
+      final userDoc = await tx.get(userRef);
+      if (!userDoc.exists) throw Exception('User not found');
+
+      final currentBalance =
+          (userDoc.data()?['kathaBalance'] ?? 0.0).toDouble();
+      
+      // If transaction type is credit (store gives credit/advance), balance increases.
+      // If payment (customer pays back), balance decreases.
+      final amountChange = transaction.type == TransactionType.credit 
+          ? transaction.amount 
+          : -transaction.amount;
+          
+      final newBalance = currentBalance + amountChange;
+
+      tx.update(userRef, {'kathaBalance': newBalance});
+      
+      final transactionMap = transaction.toMap();
+      transactionMap['createdAt'] = FieldValue.serverTimestamp();
+      tx.set(kathaRef, transactionMap);
+    });
+  }
 
   // ---------- Categories ----------
 

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import '../../core/formatters.dart';
 import '../../models/product.dart';
@@ -30,8 +31,7 @@ class ProductDetailsScreen extends StatelessWidget {
                 children: [
                   Text(
                     product.name,
-                    style: const TextStyle(
-                        fontSize: 20, fontWeight: FontWeight.bold),
+                    style: GoogleFonts.mandali(fontSize: 22, fontWeight: FontWeight.bold, height: 1.2),
                   ),
                   const SizedBox(height: 4),
                   if (product.unit.isNotEmpty)

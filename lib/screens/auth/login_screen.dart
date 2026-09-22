@@ -62,57 +62,136 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
+    final size = MediaQuery.of(context).size;
 
     return Scaffold(
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Container(
-                  height: 96,
-                  width: 96,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: AppTheme.primary.withValues(alpha: 0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(Icons.storefront,
-                      size: 56, color: AppTheme.primary),
+      body: Stack(
+        children: [
+          // Background Premium Gradient Header
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: Container(
+              height: size.height * 0.4,
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [AppTheme.primaryDark, AppTheme.primary],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
                 ),
-                const SizedBox(height: 20),
-                const Text(
-                  'Kirana Shop',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
+                borderRadius: BorderRadius.only(
+                  bottomLeft: Radius.circular(50),
+                  bottomRight: Radius.circular(50),
                 ),
-                const SizedBox(height: 24),
-                SegmentedButton<String>(
-                  segments: const [
-                    ButtonSegment(
-                        value: 'customer',
-                        label: Text('Customer'),
-                        icon: Icon(Icons.person)),
-                    ButtonSegment(
-                        value: 'admin',
-                        label: Text('Admin'),
-                        icon: Icon(Icons.admin_panel_settings)),
+              ),
+              child: SafeArea(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.15),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.shopping_basket_rounded, size: 56, color: Colors.white),
+                    ),
+                    const SizedBox(height: 16),
+                    const Text(
+                      'KIRANA SHOP',
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.w900,
+                        color: Colors.white,
+                        letterSpacing: 2.0,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Quality Groceries, Delivered Fast.',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.white70,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                    const SizedBox(height: 40),
                   ],
-                  selected: {_mode},
-                  onSelectionChanged: (s) => setState(() => _mode = s.first),
                 ),
-                const SizedBox(height: 24),
-                if (_mode == 'customer')
-                  _buildCustomerForm(auth)
-                else
-                  _buildAdminForm(auth),
-              ],
+              ),
             ),
           ),
-        ),
+          
+          // Form Card
+          SafeArea(
+            child: Center(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.only(left: 24, right: 24, top: 160),
+                child: Card(
+                  elevation: 12,
+                  shadowColor: AppTheme.primaryDark.withValues(alpha: 0.2),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(24),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 40),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        const Text(
+                          'Welcome',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 26, 
+                            fontWeight: FontWeight.w800,
+                            color: AppTheme.primaryDark,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        const Text(
+                          'Sign in to access your account',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 14, 
+                            color: Colors.black54,
+                          ),
+                        ),
+                        const SizedBox(height: 32),
+                        SegmentedButton<String>(
+                          style: SegmentedButton.styleFrom(
+                            selectedBackgroundColor: AppTheme.primary.withValues(alpha: 0.1),
+                            selectedForegroundColor: AppTheme.primary,
+                          ),
+                          segments: const [
+                            ButtonSegment(
+                              value: 'customer',
+                              label: Text('Customer', style: TextStyle(fontWeight: FontWeight.bold)),
+                              icon: Icon(Icons.person),
+                            ),
+                            ButtonSegment(
+                              value: 'admin',
+                              label: Text('Admin', style: TextStyle(fontWeight: FontWeight.bold)),
+                              icon: Icon(Icons.admin_panel_settings),
+                            ),
+                          ],
+                          selected: {_mode},
+                          onSelectionChanged: (s) => setState(() => _mode = s.first),
+                        ),
+                        const SizedBox(height: 32),
+                        if (_mode == 'customer')
+                          _buildCustomerForm(auth)
+                        else
+                          _buildAdminForm(auth),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -128,11 +207,22 @@ class _LoginScreenState extends State<LoginScreen> {
             keyboardType: TextInputType.phone,
             maxLength: 10,
             inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               labelText: 'Mobile Number',
+              hintText: 'Enter your 10-digit number',
               prefixText: '+91 ',
               counterText: '',
-              prefixIcon: Icon(Icons.phone_android),
+              prefixIcon: const Icon(Icons.phone_android, color: AppTheme.primary),
+              filled: true,
+              fillColor: Colors.grey.shade50,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: Colors.grey.shade300),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: Colors.grey.shade300),
+              ),
             ),
             validator: (v) {
               if ((v?.trim().length ?? 0) != 10) {
@@ -141,15 +231,31 @@ class _LoginScreenState extends State<LoginScreen> {
               return null;
             },
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 24),
           if (auth.error != null) ...[
-            Text(auth.error!,
-                style: const TextStyle(color: Colors.red),
-                textAlign: TextAlign.center),
-            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.red.shade50,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                auth.error!,
+                style: const TextStyle(color: Colors.red, fontSize: 13),
+                textAlign: TextAlign.center,
+              ),
+            ),
+            const SizedBox(height: 16),
           ],
           ElevatedButton(
             onPressed: auth.busy ? null : _memberLogin,
+            style: ElevatedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
             child: auth.busy
                 ? const SizedBox(
                     height: 20,
@@ -157,14 +263,25 @@ class _LoginScreenState extends State<LoginScreen> {
                     child: CircularProgressIndicator(
                         strokeWidth: 2, color: Colors.white),
                   )
-                : const Text('Login'),
+                : const Text('Login', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
           ),
-          const SizedBox(height: 8),
-          TextButton(
-            onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const RegisterScreen()),
-            ),
-            child: const Text('New customer? Register here'),
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Text("New customer? ", style: TextStyle(color: Colors.black54)),
+              TextButton(
+                style: TextButton.styleFrom(
+                  padding: EdgeInsets.zero,
+                  minimumSize: const Size(0, 0),
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+                onPressed: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const RegisterScreen()),
+                ),
+                child: const Text('Register here', style: TextStyle(fontWeight: FontWeight.bold)),
+              ),
+            ],
           ),
         ],
       ),
@@ -179,40 +296,76 @@ class _LoginScreenState extends State<LoginScreen> {
         children: [
           TextFormField(
             controller: _usernameController,
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               labelText: 'Username',
-              prefixIcon: Icon(Icons.person_outline),
+              prefixIcon: const Icon(Icons.person_outline, color: AppTheme.primary),
+              filled: true,
+              fillColor: Colors.grey.shade50,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: Colors.grey.shade300),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: Colors.grey.shade300),
+              ),
             ),
             validator: (v) =>
                 (v?.trim().isEmpty ?? true) ? 'Enter username' : null,
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
           TextFormField(
             controller: _passwordController,
             obscureText: _obscurePassword,
             decoration: InputDecoration(
               labelText: 'Password',
-              prefixIcon: const Icon(Icons.lock_outline),
+              prefixIcon: const Icon(Icons.lock_outline, color: AppTheme.primary),
               suffixIcon: IconButton(
                 icon: Icon(
                     _obscurePassword ? Icons.visibility_off : Icons.visibility),
                 onPressed: () =>
                     setState(() => _obscurePassword = !_obscurePassword),
               ),
+              filled: true,
+              fillColor: Colors.grey.shade50,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: Colors.grey.shade300),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: Colors.grey.shade300),
+              ),
             ),
             validator: (v) =>
                 (v?.isEmpty ?? true) ? 'Enter password' : null,
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 24),
           if (auth.error != null) ...[
-            Text(auth.error!,
-                style: const TextStyle(color: Colors.red),
-                textAlign: TextAlign.center),
-            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.red.shade50,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                auth.error!,
+                style: const TextStyle(color: Colors.red, fontSize: 13),
+                textAlign: TextAlign.center,
+              ),
+            ),
+            const SizedBox(height: 16),
           ],
           ElevatedButton(
             onPressed: _adminLogin,
-            child: const Text('Admin Login'),
+            style: ElevatedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            child: const Text('Admin Login', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
           ),
         ],
       ),

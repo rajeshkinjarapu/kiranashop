@@ -6,6 +6,7 @@ class AppUser {
   final String phone;
   final String role; // 'admin' | 'member'
   final DateTime? createdAt;
+  final double kathaBalance; // > 0 means they owe money (Baki), < 0 means advance
 
   const AppUser({
     required this.id,
@@ -13,6 +14,7 @@ class AppUser {
     required this.phone,
     required this.role,
     this.createdAt,
+    this.kathaBalance = 0.0,
   });
 
   bool get isAdmin => role == 'admin';
@@ -25,6 +27,7 @@ class AppUser {
       phone: d['phone'] ?? '',
       role: d['role'] ?? 'member',
       createdAt: (d['createdAt'] as Timestamp?)?.toDate(),
+      kathaBalance: (d['kathaBalance'] ?? 0.0).toDouble(),
     );
   }
 
@@ -35,13 +38,15 @@ class AppUser {
         'createdAt': createdAt != null
             ? Timestamp.fromDate(createdAt!)
             : FieldValue.serverTimestamp(),
+        'kathaBalance': kathaBalance,
       };
 
-  AppUser copyWith({String? name}) => AppUser(
+  AppUser copyWith({String? name, double? kathaBalance}) => AppUser(
         id: id,
         name: name ?? this.name,
         phone: phone,
         role: role,
         createdAt: createdAt,
+        kathaBalance: kathaBalance ?? this.kathaBalance,
       );
 }

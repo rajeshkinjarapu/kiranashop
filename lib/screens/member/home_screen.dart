@@ -7,6 +7,7 @@ import '../../providers/settings_provider.dart';
 import '../../widgets/empty_state.dart';
 import '../../widgets/network_image_box.dart';
 import '../../widgets/product_card.dart';
+import 'notifications_screen.dart';
 import 'product_list_screen.dart';
 import 'search_screen.dart';
 
@@ -25,76 +26,150 @@ class HomeScreen extends StatelessWidget {
           child: CustomScrollView(
             slivers: [
               SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    Container(
+                      margin: const EdgeInsets.only(bottom: 24),
+                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 42),
+                      decoration: const BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [AppTheme.primaryDark, AppTheme.primary],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.only(
+                          bottomLeft: Radius.circular(32),
+                          bottomRight: Radius.circular(32),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          NetworkImageBox(
-                            url: settings.logoUrl,
-                            width: 48,
-                            height: 48,
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          const SizedBox(width: 12),
                           Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                            child: Row(
                               children: [
-                                Text(
-                                  settings.shopName,
-                                  style: const TextStyle(
-                                      fontSize: 20, fontWeight: FontWeight.bold),
+                                NetworkImageBox(
+                                  url: settings.logoUrl,
+                                  width: 52,
+                                  height: 52,
+                                  borderRadius: BorderRadius.circular(12),
                                 ),
-                                Row(
-                                  children: [
-                                    Icon(Icons.circle,
-                                        size: 8,
-                                        color: settings.isOpen
-                                            ? AppTheme.primary
-                                            : Colors.red),
-                                    const SizedBox(width: 4),
-                                    Text(
-                                      settings.isOpen ? 'Open now' : 'Closed',
-                                      style: TextStyle(
-                                          color: Colors.grey.shade600,
-                                          fontSize: 12),
-                                    ),
-                                  ],
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        settings.shopName.toUpperCase(),
+                                        style: const TextStyle(
+                                          fontSize: 20, 
+                                          fontWeight: FontWeight.w900,
+                                          color: Colors.white,
+                                          letterSpacing: 1.0,
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Row(
+                                        children: [
+                                          Icon(Icons.circle,
+                                              size: 10,
+                                              color: settings.isOpen
+                                                  ? Colors.greenAccent
+                                                  : Colors.redAccent),
+                                          const SizedBox(width: 6),
+                                          Text(
+                                            settings.isOpen ? 'Open now' : 'Closed',
+                                            style: const TextStyle(
+                                                color: Colors.white70,
+                                                fontSize: 13,
+                                                fontWeight: FontWeight.w500),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ],
                             ),
                           ),
+                          Stack(
+                            alignment: Alignment.center,
+                            children: [
+                              IconButton(
+                                icon: const Icon(Icons.notifications_outlined, color: Colors.white, size: 28),
+                                onPressed: () {
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(builder: (_) => const NotificationsScreen()),
+                                  );
+                                },
+                              ),
+                              Positioned(
+                                right: 10,
+                                top: 10,
+                                child: Container(
+                                  padding: const EdgeInsets.all(4),
+                                  decoration: const BoxDecoration(
+                                    color: Colors.redAccent,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Text(
+                                    '2', 
+                                    style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)
+                                  ),
+                                ),
+                              )
+                            ],
+                          )
                         ],
                       ),
-                      const SizedBox(height: 16),
-                      InkWell(
+                    ),
+                    Positioned(
+                      left: 16,
+                      right: 16,
+                      bottom: 0,
+                      child: InkWell(
                         onTap: () => Navigator.of(context).push(
                           MaterialPageRoute(builder: (_) => const SearchScreen()),
                         ),
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(16),
                         child: Container(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 14, vertical: 13),
+                              horizontal: 16, vertical: 14),
                           decoration: BoxDecoration(
                             color: Colors.white,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: Colors.grey.shade300),
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.1),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
                           ),
                           child: Row(
                             children: [
-                              Icon(Icons.search, color: Colors.grey.shade500),
-                              const SizedBox(width: 8),
+                              Icon(Icons.search, color: AppTheme.primary.withValues(alpha: 0.7)),
+                              const SizedBox(width: 12),
                               Text('Search products...',
                                   style:
-                                      TextStyle(color: Colors.grey.shade500)),
+                                      TextStyle(color: Colors.grey.shade500, fontSize: 15)),
                             ],
                           ),
                         ),
                       ),
-                      const SizedBox(height: 16),
+                    ),
+                  ],
+                ),
+              ),
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
                       if (products.offers.isNotEmpty)
                         SizedBox(
                           height: 130,
@@ -141,7 +216,8 @@ class HomeScreen extends StatelessWidget {
                             },
                           ),
                         ),
-                      const SizedBox(height: 16),
+                      if (products.offers.isNotEmpty)
+                        const SizedBox(height: 16),
                       if (products.categories.isNotEmpty) ...[
                         const Text('Categories',
                             style: TextStyle(
@@ -202,6 +278,7 @@ class HomeScreen extends StatelessWidget {
                   ),
                 ),
               ),
+
               if (products.featuredProducts.isNotEmpty) ...[
                 const SliverToBoxAdapter(
                   child: Padding(
