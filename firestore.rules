@@ -1,0 +1,10 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // NOTE: App uses mobile-number-only login (no Firebase Auth),
+    // so the database is open. Suitable for testing / small shop use.
+    match /{document=**} {
+      allow read, write: if true;
+    }
+  }
+}
