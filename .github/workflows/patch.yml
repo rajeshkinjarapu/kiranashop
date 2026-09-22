@@ -1,0 +1,45 @@
+name: Shorebird Patch Update
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - 'README.md'
+      - '.github/**'
+  workflow_dispatch:
+    inputs:
+      target_release_version:
+        description: 'Target release version to patch (leave empty for latest detected release)'
+        required: false
+        default: ''
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Shorebird
+        uses: shorebirdtech/actions/setup-shorebird@v1
+
+      - name: Install Dependencies
+        run: shorebird flutter pub get
+
+      - name: Push Shorebird Patch
+        env:
+          SHOREBIRD_TOKEN: ${{ secrets.SHOREBIRD_TOKEN }}
+        run: |
+          if [ -n "${{ github.event.inputs.target_release_version }}" ]; then
+            shorebird patch android --force --target-release-version="${{ github.event.inputs.target_release_version }}"
+          else
+            shorebird patch android --force
+          fi
