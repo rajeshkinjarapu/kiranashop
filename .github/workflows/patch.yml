@@ -32,7 +32,7 @@ jobs:
         uses: shorebirdtech/setup-shorebird@v1
 
       - name: Install Dependencies
-        run: shorebird flutter pub get
+        run: shorebird pub get
 
       - name: Push Shorebird Patch
         env:
