@@ -26,7 +26,7 @@ jobs:
         uses: shorebirdtech/setup-shorebird@v1
 
       - name: Install Dependencies
-        run: shorebird flutter pub get
+        run: flutter pub get
 
       - name: Build Shorebird Release APK
         env:
