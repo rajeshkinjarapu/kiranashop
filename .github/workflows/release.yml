@@ -23,7 +23,7 @@ jobs:
           java-version: '17'
 
       - name: Setup Shorebird
-        uses: shorebirdtech/actions/setup-shorebird@v1
+        uses: shorebirdtech/setup-shorebird@v1
 
       - name: Install Dependencies
         run: shorebird flutter pub get
