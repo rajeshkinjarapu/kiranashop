@@ -215,23 +215,76 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               const Text('Payment Method',
                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
               const SizedBox(height: 6),
-              RadioGroup<String>(
-                groupValue: _payment,
-                onChanged: (v) => setState(() => _payment = v ?? _payment),
-                child: Column(
-                  children: AppConstants.paymentMethods
-                      .map(
-                        (m) => RadioListTile<String>(
-                          value: m,
-                          title: Text(m == 'UPI' && settings.upiId.isNotEmpty
-                              ? 'UPI (${settings.upiId})'
-                              : m),
-                          contentPadding: EdgeInsets.zero,
-                          dense: true,
+              Column(
+                children: AppConstants.paymentMethods.map((m) {
+                  final isSelected = _payment == m;
+                  final isKatha = m.contains('Katha');
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: InkWell(
+                      onTap: () => setState(() => _payment = m),
+                      borderRadius: BorderRadius.circular(16),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                        decoration: BoxDecoration(
+                          color: isSelected ? Colors.blue.shade50 : Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: isSelected ? Colors.blue.shade300 : Colors.grey.shade300,
+                            width: isSelected ? 2 : 1,
+                          ),
+                          boxShadow: isSelected ? [
+                            BoxShadow(color: Colors.blue.withValues(alpha: 0.1), blurRadius: 8, offset: const Offset(0, 4))
+                          ] : null,
                         ),
-                      )
-                      .toList(),
-                ),
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(10),
+                              decoration: BoxDecoration(
+                                color: isSelected ? Colors.blue.shade100 : Colors.grey.shade100,
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(
+                                isKatha ? Icons.menu_book_rounded : Icons.qr_code_scanner_rounded,
+                                color: isSelected ? Colors.blue.shade700 : Colors.grey.shade600,
+                                size: 22,
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    m,
+                                    style: TextStyle(
+                                      fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
+                                      fontSize: 15,
+                                      color: isSelected ? Colors.blue.shade900 : Colors.grey.shade800,
+                                    ),
+                                  ),
+                                  if (isKatha)
+                                    Text(
+                                      'Add to your Khata Book',
+                                      style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+                                    )
+                                  else if (m == 'UPI' && settings.upiId.isNotEmpty)
+                                    Text(
+                                      settings.upiId,
+                                      style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+                                    ),
+                                ],
+                              ),
+                            ),
+                            if (isSelected)
+                              Icon(Icons.check_circle_rounded, color: Colors.blue.shade600),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                }).toList(),
               ),
               const SizedBox(height: 16),
               Card(

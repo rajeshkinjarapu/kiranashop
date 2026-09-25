@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 class ShopSettings {
   final String shopName;
+  final String ownerName;
   final String logoUrl;
   final String address;
   final String phone;
@@ -12,6 +13,7 @@ class ShopSettings {
 
   const ShopSettings({
     this.shopName = 'Kirana Shop',
+    this.ownerName = 'Shop Owner',
     this.logoUrl = '',
     this.address = '',
     this.phone = '',
@@ -26,6 +28,7 @@ class ShopSettings {
     if (d == null) return const ShopSettings();
     return ShopSettings(
       shopName: d['shopName'] ?? 'Kirana Shop',
+      ownerName: d['ownerName'] ?? 'Shop Owner',
       logoUrl: d['logoUrl'] ?? '',
       address: d['address'] ?? '',
       phone: d['phone'] ?? '',
@@ -38,6 +41,7 @@ class ShopSettings {
 
   Map<String, dynamic> toMap() => {
         'shopName': shopName,
+        'ownerName': ownerName,
         'logoUrl': logoUrl,
         'address': address,
         'phone': phone,

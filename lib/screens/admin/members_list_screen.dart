@@ -29,9 +29,10 @@ class _MembersListScreenState extends State<MembersListScreen> {
     final firestore = FirestoreService();
 
     return Scaffold(
+      backgroundColor: const Color(0xFFF1F5F9), // Light background
       appBar: AppBar(
-        title: const Text('Members & Katha Book',
-            style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text('Total Customers',
+            style: TextStyle(fontWeight: FontWeight.w700, letterSpacing: -0.5)),
         centerTitle: true,
       ),
       body: Column(
@@ -60,6 +61,10 @@ class _MembersListScreenState extends State<MembersListScreen> {
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide.none,
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: Colors.white24, width: 2),
                 ),
               ),
             ),
@@ -121,21 +126,33 @@ class _MembersListScreenState extends State<MembersListScreen> {
                         child: Padding(
                           padding: const EdgeInsets.symmetric(vertical: 8),
                           child: ListTile(
-                            leading: CircleAvatar(
-                              backgroundColor: AppTheme.primary.withValues(alpha: 0.1),
+                            leading: Container(
+                              width: 48,
+                              height: 48,
+                              decoration: BoxDecoration(
+                                color: AppTheme.primary.withValues(alpha: 0.1),
+                                shape: BoxShape.circle,
+                              ),
+                              alignment: Alignment.center,
                               child: Text(
                                 m.name.isNotEmpty ? m.name[0].toUpperCase() : '?',
                                 style: const TextStyle(
                                   color: AppTheme.primary,
                                   fontWeight: FontWeight.bold,
+                                  fontSize: 20,
                                 ),
                               ),
                             ),
                             title: Text(m.name,
                                 style: const TextStyle(
-                                    fontWeight: FontWeight.bold, fontSize: 16)),
-                            subtitle: Text(m.phone,
-                                style: TextStyle(color: Colors.grey.shade600)),
+                                    fontWeight: FontWeight.bold, fontSize: 16, color: Color(0xFF1E293B))),
+                            subtitle: Row(
+                              children: [
+                                const Icon(Icons.phone_android_rounded, size: 14, color: Colors.black54),
+                                const SizedBox(width: 4),
+                                Text(m.phone, style: TextStyle(color: Colors.grey.shade600, fontSize: 13, fontWeight: FontWeight.w500)),
+                              ],
+                            ),
                             trailing: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               crossAxisAlignment: CrossAxisAlignment.end,
@@ -172,6 +189,122 @@ class _MembersListScreenState extends State<MembersListScreen> {
           ),
         ],
       ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => _showAddCustomerDialog(context),
+        icon: const Icon(Icons.person_add_rounded, color: Colors.white),
+        label: const Text('Add Customer', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        backgroundColor: const Color(0xFF0265DC),
+      ),
+    );
+  }
+
+  Future<void> _showAddCustomerDialog(BuildContext context) async {
+    final nameCtrl = TextEditingController();
+    final phoneCtrl = TextEditingController();
+    final passwordCtrl = TextEditingController();
+    final formKey = GlobalKey<FormState>();
+    bool loading = false;
+    bool obscurePassword = true;
+
+    await showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: const Text('Add New Customer', style: TextStyle(fontWeight: FontWeight.bold)),
+              content: Form(
+                key: formKey,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextFormField(
+                      controller: nameCtrl,
+                      decoration: const InputDecoration(labelText: 'Customer Name', border: OutlineInputBorder()),
+                      validator: (v) => v!.trim().isEmpty ? 'Enter name' : null,
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: phoneCtrl,
+                      keyboardType: TextInputType.phone,
+                      maxLength: 10,
+                      decoration: const InputDecoration(
+                        labelText: 'Mobile Number', 
+                        border: OutlineInputBorder(), 
+                        prefixText: '+91 ',
+                        counterText: '',
+                      ),
+                      validator: (v) => v!.trim().length < 10 ? 'Enter valid number' : null,
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: passwordCtrl,
+                      keyboardType: TextInputType.number,
+                      maxLength: 6,
+                      obscureText: obscurePassword,
+                      decoration: InputDecoration(
+                        labelText: 'Password (6 digits)', 
+                        border: const OutlineInputBorder(),
+                        counterText: '',
+                        suffixIcon: IconButton(
+                          icon: Icon(obscurePassword ? Icons.visibility_off : Icons.visibility),
+                          onPressed: () => setState(() => obscurePassword = !obscurePassword),
+                        ),
+                      ),
+                      validator: (v) => v!.trim().length != 6 ? 'Enter 6-digit PIN' : null,
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Cancel'),
+                ),
+                ElevatedButton(
+                  onPressed: loading
+                      ? null
+                      : () async {
+                          if (!formKey.currentState!.validate()) return;
+                          setState(() => loading = true);
+                          final phone = phoneCtrl.text.trim();
+                          
+                          // Check if user already exists
+                          final existing = await FirestoreService().findUserByPhone(phone);
+                          if (existing != null) {
+                            setState(() => loading = false);
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Customer with this number already exists!')),
+                              );
+                            }
+                            return;
+                          }
+                          
+                          // Create user
+                          await FirestoreService().createUser(
+                            name: nameCtrl.text.trim(), 
+                            phone: phone,
+                            password: passwordCtrl.text.trim(),
+                          );
+                          
+                          if (context.mounted) {
+                            Navigator.pop(context);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Customer added successfully!')),
+                            );
+                          }
+                        },
+                  style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF0265DC), foregroundColor: Colors.white),
+                  child: loading
+                      ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                      : const Text('Add Customer'),
+                ),
+              ],
+            );
+          },
+        );
+      },
     );
   }
 }

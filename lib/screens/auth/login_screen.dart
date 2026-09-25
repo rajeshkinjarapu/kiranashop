@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../../core/theme.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/settings_provider.dart';
 import 'register_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -19,13 +20,16 @@ class _LoginScreenState extends State<LoginScreen> {
   final _memberFormKey = GlobalKey<FormState>();
   final _adminFormKey = GlobalKey<FormState>();
   final _phoneController = TextEditingController();
+  final _memberPasswordController = TextEditingController();
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
+  bool _obscureMemberPassword = true;
 
   @override
   void dispose() {
     _phoneController.dispose();
+    _memberPasswordController.dispose();
     _usernameController.dispose();
     _passwordController.dispose();
     super.dispose();
@@ -34,7 +38,10 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _memberLogin() async {
     if (!_memberFormKey.currentState!.validate()) return;
     final auth = context.read<AuthProvider>();
-    final result = await auth.memberLogin(_phoneController.text.trim());
+    final result = await auth.memberLogin(
+      _phoneController.text.trim(),
+      _memberPasswordController.text.trim(),
+    );
     if (!mounted) return;
     if (result == 'not_registered') {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -46,6 +53,10 @@ class _LoginScreenState extends State<LoginScreen> {
           builder: (_) =>
               RegisterScreen(initialPhone: _phoneController.text.trim()),
         ),
+      );
+    } else if (result == 'invalid_password') {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Incorrect password. Please try again.')),
       );
     }
     // On success RootRouter automatically navigates to Member Home.
@@ -62,6 +73,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
+    final settings = context.watch<SettingsProvider>().settings;
     final size = MediaQuery.of(context).size;
 
     return Scaffold(
@@ -89,18 +101,37 @@ class _LoginScreenState extends State<LoginScreen> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.15),
-                        shape: BoxShape.circle,
+                    if (settings.logoUrl.isNotEmpty)
+                      Container(
+                        width: 96,
+                        height: 96,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.white,
+                          boxShadow: [
+                            BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 10, offset: const Offset(0, 4))
+                          ],
+                          image: DecorationImage(
+                            image: settings.logoUrl.startsWith('data:image/') 
+                              ? MemoryImage(Uri.parse(settings.logoUrl).data!.contentAsBytes()) as ImageProvider
+                              : NetworkImage(settings.logoUrl),
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                      )
+                    else
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.15),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(Icons.shopping_basket_rounded, size: 56, color: Colors.white),
                       ),
-                      child: const Icon(Icons.shopping_basket_rounded, size: 56, color: Colors.white),
-                    ),
                     const SizedBox(height: 16),
-                    const Text(
-                      'KIRANA SHOP',
-                      style: TextStyle(
+                    Text(
+                      settings.shopName.toUpperCase(),
+                      style: const TextStyle(
                         fontSize: 28,
                         fontWeight: FontWeight.w900,
                         color: Colors.white,
@@ -227,6 +258,43 @@ class _LoginScreenState extends State<LoginScreen> {
             validator: (v) {
               if ((v?.trim().length ?? 0) != 10) {
                 return 'Enter a valid 10-digit mobile number';
+              }
+              return null;
+            },
+          ),
+          const SizedBox(height: 16),
+          TextFormField(
+            controller: _memberPasswordController,
+            keyboardType: TextInputType.number,
+            maxLength: 6,
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+            obscureText: _obscureMemberPassword,
+            decoration: InputDecoration(
+              labelText: 'Password (6 digits)',
+              hintText: 'Enter 6-digit PIN',
+              counterText: '',
+              prefixIcon: const Icon(Icons.lock_outline, color: AppTheme.primary),
+              suffixIcon: IconButton(
+                icon: Icon(
+                  _obscureMemberPassword ? Icons.visibility_off : Icons.visibility,
+                  color: Colors.grey,
+                ),
+                onPressed: () => setState(() => _obscureMemberPassword = !_obscureMemberPassword),
+              ),
+              filled: true,
+              fillColor: Colors.grey.shade50,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: Colors.grey.shade300),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: Colors.grey.shade300),
+              ),
+            ),
+            validator: (v) {
+              if ((v?.trim().length ?? 0) != 6) {
+                return 'Enter a valid 6-digit password';
               }
               return null;
             },

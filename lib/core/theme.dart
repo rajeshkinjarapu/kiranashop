@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
 class AppTheme {
-  // Professional Deep Indigo/Blue theme
-  static const Color primary = Color(0xFF1E3A8A); // Indigo-900
-  static const Color primaryDark = Color(0xFF172554); // Indigo-950
+  // Professional Deep Blue theme
+  static const Color primary = Color(0xFF0265DC); // Dashboard Blue
+  static const Color primaryDark = Color(0xFF0258C5);
   static const Color accent = Color(0xFFF59E0B); // Amber-500
   static const Color background = Color(0xFFF8FAFC); // Slate-50
 

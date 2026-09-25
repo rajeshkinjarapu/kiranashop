@@ -58,8 +58,9 @@ class AuthProvider extends ChangeNotifier {
   }
 
   /// Returns null on success, 'not_registered' if the number is new,
+  /// 'invalid_password' if password doesn't match,
   /// or 'error' on failure.
-  Future<String?> memberLogin(String phone) async {
+  Future<String?> memberLogin(String phone, String password) async {
     busy = true;
     error = null;
     notifyListeners();
@@ -69,6 +70,11 @@ class AuthProvider extends ChangeNotifier {
         busy = false;
         notifyListeners();
         return 'not_registered';
+      }
+      if (found.password.isNotEmpty && found.password != password) {
+        busy = false;
+        notifyListeners();
+        return 'invalid_password';
       }
       user = found;
       status = AuthStatus.authenticated;
@@ -85,14 +91,14 @@ class AuthProvider extends ChangeNotifier {
   }
 
   /// Registers a new member. If the number already exists, logs in instead.
-  Future<bool> register(String name, String phone) async {
+  Future<bool> register(String name, String phone, String password) async {
     busy = true;
     error = null;
     notifyListeners();
     try {
       final existing = await _service.findUserByPhone(phone);
       final u = existing ??
-          await _service.createUser(name: name.trim(), phone: phone);
+          await _service.createUser(name: name.trim(), phone: phone, password: password);
       user = u;
       status = AuthStatus.authenticated;
       await _saveSession(u);

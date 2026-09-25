@@ -5,6 +5,7 @@ class AppUser {
   final String name;
   final String phone;
   final String role; // 'admin' | 'member'
+  final String password; // 6-digit password
   final DateTime? createdAt;
   final double kathaBalance; // > 0 means they owe money (Baki), < 0 means advance
 
@@ -13,6 +14,7 @@ class AppUser {
     required this.name,
     required this.phone,
     required this.role,
+    this.password = '',
     this.createdAt,
     this.kathaBalance = 0.0,
   });
@@ -26,6 +28,7 @@ class AppUser {
       name: d['name'] ?? '',
       phone: d['phone'] ?? '',
       role: d['role'] ?? 'member',
+      password: d['password'] ?? '',
       createdAt: (d['createdAt'] as Timestamp?)?.toDate(),
       kathaBalance: (d['kathaBalance'] ?? 0.0).toDouble(),
     );
@@ -35,17 +38,19 @@ class AppUser {
         'name': name,
         'phone': phone,
         'role': role,
+        'password': password,
         'createdAt': createdAt != null
             ? Timestamp.fromDate(createdAt!)
             : FieldValue.serverTimestamp(),
         'kathaBalance': kathaBalance,
       };
 
-  AppUser copyWith({String? name, double? kathaBalance}) => AppUser(
+  AppUser copyWith({String? name, String? password, double? kathaBalance}) => AppUser(
         id: id,
         name: name ?? this.name,
         phone: phone,
         role: role,
+        password: password ?? this.password,
         createdAt: createdAt,
         kathaBalance: kathaBalance ?? this.kathaBalance,
       );

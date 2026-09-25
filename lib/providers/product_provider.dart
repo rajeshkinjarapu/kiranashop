@@ -55,6 +55,10 @@ class ProductProvider extends ChangeNotifier {
       .where((p) => p.categoryId == categoryId && p.inStock)
       .toList();
 
+  /// Products with stock qty <= 5 (low stock warning)
+  int get lowStockCount =>
+      products.where((p) => p.isActive && p.stockQty <= 5).length;
+
   List<Product> get searchResults {
     final q = searchQuery.trim().toLowerCase();
     if (q.isEmpty) return [];

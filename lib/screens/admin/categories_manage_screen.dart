@@ -24,123 +24,76 @@ class _CategoriesManageScreenState extends State<CategoriesManageScreen> {
 
     await showDialog<bool>(
       context: context,
-      builder: (ctx) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        elevation: 16,
-        child: Container(
-          padding: const EdgeInsets.all(24),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Form(
-            key: formKey,
+      builder: (ctx) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(
+              category == null ? Icons.add_circle_outline : Icons.edit_outlined,
+              color: Theme.of(context).primaryColor,
+              size: 28,
+            ),
+            const SizedBox(width: 12),
+            Text(category == null ? 'Add Category' : 'Edit Category'),
+          ],
+        ),
+        content: Form(
+          key: formKey,
+          child: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Row(
-                  children: [
-                    Icon(
-                      category == null ? Icons.add_circle_outline : Icons.edit_outlined,
-                      color: Theme.of(context).primaryColor,
-                      size: 28,
-                    ),
-                    const SizedBox(width: 12),
-                    Text(
-                      category == null ? 'Add Category' : 'Edit Category',
-                      style: const TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black87,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 24),
                 TextFormField(
                   controller: nameCtrl,
                   autofocus: true,
                   textCapitalization: TextCapitalization.words,
-                  decoration: InputDecoration(
+                  decoration: const InputDecoration(
                     labelText: 'Category Name',
                     hintText: 'e.g. Fresh Vegetables',
-                    filled: true,
-                    fillColor: Colors.grey.shade50,
-                    prefixIcon: const Icon(Icons.category, color: Colors.blueGrey),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.grey.shade300),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.grey.shade300),
-                    ),
+                    border: OutlineInputBorder(),
                   ),
                   validator: (v) =>
-                      (v?.trim().isEmpty ?? true) ? 'Please enter a name' : null,
+                      (v == null || v.trim().isEmpty) ? 'Please enter a name' : null,
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: orderCtrl,
                   keyboardType: TextInputType.number,
-                  decoration: InputDecoration(
+                  decoration: const InputDecoration(
                     labelText: 'Sort Order',
                     hintText: '0 = first, 1 = second...',
-                    filled: true,
-                    fillColor: Colors.grey.shade50,
-                    prefixIcon: const Icon(Icons.sort, color: Colors.blueGrey),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.grey.shade300),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.grey.shade300),
-                    ),
+                    border: OutlineInputBorder(),
                   ),
-                ),
-                const SizedBox(height: 32),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(ctx),
-                      style: TextButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                        foregroundColor: Colors.black54,
-                      ),
-                      child: const Text('Cancel', style: TextStyle(fontSize: 16)),
-                    ),
-                    const SizedBox(width: 12),
-                    ElevatedButton(
-                      onPressed: () async {
-                        if (!formKey.currentState!.validate()) return;
-                        final newCategory = Category(
-                          id: category?.id ?? '',
-                          name: nameCtrl.text.trim(),
-                          imageUrl: category?.imageUrl ?? '',
-                          sortOrder: int.tryParse(orderCtrl.text.trim()) ?? 0,
-                          isActive: category?.isActive ?? true,
-                        );
-                        await _firestore.saveCategory(newCategory,
-                            id: category?.id.isEmpty == true ? null : category?.id);
-                        if (ctx.mounted) Navigator.pop(ctx, true);
-                      },
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      child: const Text('Save', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                    ),
-                  ],
                 ),
               ],
             ),
           ),
         ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              if (!formKey.currentState!.validate()) return;
+              final newCategory = Category(
+                id: category?.id ?? '',
+                name: nameCtrl.text.trim(),
+                imageUrl: category?.imageUrl ?? '',
+                sortOrder: int.tryParse(orderCtrl.text.trim()) ?? 0,
+                isActive: category?.isActive ?? true,
+              );
+              await _firestore.saveCategory(newCategory,
+                  id: (category?.id ?? '').isEmpty ? null : category?.id);
+              if (ctx.mounted) Navigator.pop(ctx, true);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF0265DC),
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Save'),
+          ),
+        ],
       ),
     );
 

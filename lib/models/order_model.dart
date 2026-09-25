@@ -60,7 +60,7 @@ class OrderModel {
     required this.customerPhone,
     this.address = '',
     this.fulfillmentType = 'Delivery',
-    this.paymentMethod = 'Cash',
+    this.paymentMethod = 'Katha (అరువు)',
     this.items = const [],
     required this.subtotal,
     this.deliveryCharge = 0,

@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
@@ -29,10 +30,13 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
   late final TextEditingController _nameCtrl;
   late final TextEditingController _descCtrl;
   late final TextEditingController _priceCtrl;
-  late final TextEditingController _unitCtrl;
+  late final TextEditingController _unitQtyCtrl;
   late final TextEditingController _stockCtrl;
 
   Category? _selectedCategory;
+  String _selectedUnitType = 'kg';
+  final List<String> _unitTypes = ['kg', 'g', 'L', 'ml', 'Piece', 'Packet', 'Dozen', 'Box'];
+  
   bool _inStock = true;
   bool _isFeatured = false;
   bool _isActive = true;
@@ -48,7 +52,28 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
     _descCtrl = TextEditingController(text: p?.description ?? '');
     _priceCtrl =
         TextEditingController(text: p != null ? p.price.toString() : '');
-    _unitCtrl = TextEditingController(text: p?.unit ?? '');
+        
+    String uQty = '';
+    String uType = 'kg';
+    if (p != null && p.unit.isNotEmpty) {
+      final match = RegExp(r'^(\d+(?:\.\d+)?)\s*(.*)$').firstMatch(p.unit.trim());
+      if (match != null) {
+        uQty = match.group(1) ?? '';
+        final parsedType = (match.group(2) ?? '').trim();
+        // Try to match ignoring case
+        final matchedType = _unitTypes.where((t) => t.toLowerCase() == parsedType.toLowerCase()).firstOrNull;
+        uType = matchedType ?? 'kg';
+      } else {
+        // If it doesn't match the format (e.g. just "Packet"), fallback gracefully
+        uQty = '1';
+        final matchedType = _unitTypes.where((t) => t.toLowerCase() == p.unit.trim().toLowerCase()).firstOrNull;
+        uType = matchedType ?? 'kg';
+      }
+    }
+    
+    _unitQtyCtrl = TextEditingController(text: uQty);
+    _selectedUnitType = uType;
+    
     _stockCtrl =
         TextEditingController(text: p != null ? p.stockQty.toString() : '0');
     _inStock = p?.inStock ?? true;
@@ -62,7 +87,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
     _nameCtrl.dispose();
     _descCtrl.dispose();
     _priceCtrl.dispose();
-    _unitCtrl.dispose();
+    _unitQtyCtrl.dispose();
     _stockCtrl.dispose();
     super.dispose();
   }
@@ -70,8 +95,8 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
   Future<void> _pickImage() async {
     final picked = await _picker.pickImage(
       source: ImageSource.gallery,
-      maxWidth: 1024,
-      imageQuality: 80,
+      maxWidth: 800, // Optimal size for high quality
+      imageQuality: 85, // 85% retains excellent HD quality while keeping size around 100-150KB
     );
     if (picked != null) {
       final bytes = await picked.readAsBytes();
@@ -86,10 +111,9 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
     try {
       String imageUrl = _existingImageUrl;
       if (_pickedImageBytes != null) {
-        final path =
-            'products/${DateTime.now().millisecondsSinceEpoch}.jpg';
-        imageUrl = await _storage.uploadImage(
-            bytes: _pickedImageBytes!, path: path);
+        // Compress and encode as Base64 to save directly in Firestore
+        final base64String = base64Encode(_pickedImageBytes!);
+        imageUrl = 'data:image/jpeg;base64,$base64String';
       }
 
       final existing = widget.product;
@@ -100,7 +124,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
         categoryId: _selectedCategory?.id ?? existing?.categoryId ?? '',
         categoryName: _selectedCategory?.name ?? existing?.categoryName ?? '',
         price: double.parse(_priceCtrl.text.trim()),
-        unit: _unitCtrl.text.trim(),
+        unit: '${_unitQtyCtrl.text.trim()} $_selectedUnitType'.trim(),
         imageUrl: imageUrl,
         stockQty: int.tryParse(_stockCtrl.text.trim()) ?? 0,
         inStock: _inStock,
@@ -110,7 +134,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
       );
 
       await _firestore.saveProduct(product,
-          id: existing?.id.isEmpty == true ? null : existing?.id);
+          id: (existing?.id ?? '').isEmpty ? null : existing?.id);
       if (mounted) Navigator.of(context).pop();
     } catch (e) {
       if (mounted) {
@@ -258,10 +282,34 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                   ),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: TextFormField(
-                      controller: _unitCtrl,
-                      decoration: const InputDecoration(
-                          labelText: 'Unit (e.g. 1 kg, 500 ml)'),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          flex: 3,
+                          child: TextFormField(
+                            controller: _unitQtyCtrl,
+                            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                            inputFormatters: [
+                              FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d*')),
+                            ],
+                            decoration: const InputDecoration(labelText: 'Qty (e.g. 1)'),
+                            validator: (v) => (v?.trim().isEmpty ?? true) ? 'Enter quantity' : null,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          flex: 4,
+                          child: DropdownButtonFormField<String>(
+                            value: _selectedUnitType,
+                            decoration: const InputDecoration(labelText: 'Unit'),
+                            items: _unitTypes
+                                .map((u) => DropdownMenuItem(value: u, child: Text(u)))
+                                .toList(),
+                            onChanged: (u) => setState(() => _selectedUnitType = u ?? 'kg'),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],

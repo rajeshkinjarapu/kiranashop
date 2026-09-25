@@ -14,8 +14,12 @@ class StorageService {
     String contentType = 'image/jpeg',
   }) async {
     final ref = _storage.ref().child(path);
-    final task =
-        await ref.putData(bytes, SettableMetadata(contentType: contentType));
+    final task = await ref
+        .putData(bytes, SettableMetadata(contentType: contentType))
+        .timeout(const Duration(seconds: 15), onTimeout: () {
+      throw Exception(
+          'Image upload timed out. This is usually caused by missing CORS configuration in Firebase Storage for web.');
+    });
     return task.ref.getDownloadURL();
   }
 

@@ -103,7 +103,7 @@ class _AddressesScreenState extends State<AddressesScreen> {
                             isDefault: address?.isDefault ?? false,
                           );
                           await _firestore.saveAddress(userId, newAddress,
-                              id: address?.id.isEmpty == true ? null : address?.id);
+                              id: (address?.id ?? '').isEmpty ? null : address?.id);
                           if (ctx.mounted) Navigator.pop(ctx, true);
                         },
                         style: ElevatedButton.styleFrom(

@@ -9,10 +9,15 @@ import 'providers/cart_provider.dart';
 import 'providers/order_provider.dart';
 import 'providers/product_provider.dart';
 import 'providers/settings_provider.dart';
+import 'services/notification_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  
+  final notificationService = NotificationService();
+  await notificationService.initialize();
+
   runApp(
     MultiProvider(
       providers: [

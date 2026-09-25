@@ -9,6 +9,7 @@ import '../models/offer.dart';
 import '../models/order_model.dart';
 import '../models/product.dart';
 import '../models/shop_settings.dart';
+import '../models/notification_model.dart';
 
 class FirestoreService {
   final FirebaseFirestore _db;
@@ -31,10 +32,12 @@ class FirestoreService {
   Future<AppUser> createUser({
     required String name,
     required String phone,
+    String password = '',
   }) async {
     final ref = await _db.collection(AppConstants.usersCollection).add({
       'name': name,
       'phone': phone,
+      'password': password,
       'role': AppConstants.roleMember,
       'createdAt': FieldValue.serverTimestamp(),
     });
@@ -42,6 +45,7 @@ class FirestoreService {
       id: ref.id,
       name: name,
       phone: phone,
+      password: password,
       role: AppConstants.roleMember,
     );
   }
@@ -54,9 +58,12 @@ class FirestoreService {
   Stream<List<AppUser>> membersStream() => _db
       .collection(AppConstants.usersCollection)
       .where('role', isEqualTo: AppConstants.roleMember)
-      .orderBy('createdAt', descending: true)
       .snapshots()
-      .map((s) => s.docs.map(AppUser.fromDoc).toList());
+      .map((s) {
+        final users = s.docs.map(AppUser.fromDoc).toList();
+        // Sort manually by ID or something else if needed, since createdAt might be null temporarily.
+        return users;
+      });
 
   // ---------- Katha Book (Ledger) ----------
 
@@ -176,10 +183,27 @@ class FirestoreService {
       .snapshots()
       .map((s) => s.docs.map(OrderModel.fromDoc).toList());
 
-  Future<void> updateOrderStatus(String orderId, String status) => _db
-      .collection(AppConstants.ordersCollection)
-      .doc(orderId)
-      .update({'status': status});
+  Future<void> updateOrderStatus(OrderModel order, String status) async {
+    final batch = _db.batch();
+    
+    final orderRef = _db.collection(AppConstants.ordersCollection).doc(order.id);
+    batch.update(orderRef, {'status': status});
+    
+    if (order.status == 'new' && status == 'accepted' && order.paymentMethod == 'Katha (అరువు)') {
+      final userRef = _db.collection(AppConstants.usersCollection).doc(order.userId);
+      batch.update(userRef, {'kathaBalance': FieldValue.increment(order.total)});
+      
+      final txnRef = userRef.collection('katha_transactions').doc();
+      batch.set(txnRef, {
+        'amount': order.total,
+        'type': 'give', // store gives to customer
+        'note': 'Order #${order.id.substring(0, 6).toUpperCase()}',
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+    }
+    
+    await batch.commit();
+  }
 
   // ---------- Addresses ----------
 
@@ -205,6 +229,24 @@ class FirestoreService {
       .collection(AppConstants.addressesCollection)
       .doc(id)
       .delete();
+
+  // ---------- Notifications ----------
+
+  Stream<List<NotificationModel>> notificationsStream(String userId) => _db
+      .collection(AppConstants.usersCollection)
+      .doc(userId)
+      .collection('notifications')
+      .orderBy('createdAt', descending: true)
+      .snapshots()
+      .map((s) => s.docs.map(NotificationModel.fromDoc).toList());
+
+  Future<void> markNotificationAsRead(String userId, String notificationId) =>
+      _db
+          .collection(AppConstants.usersCollection)
+          .doc(userId)
+          .collection('notifications')
+          .doc(notificationId)
+          .update({'isRead': true});
 
   // ---------- Settings ----------
 

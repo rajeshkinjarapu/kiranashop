@@ -21,7 +21,7 @@ class AppConstants {
     'delivered',
   ];
 
-  static const List<String> paymentMethods = ['Cash', 'UPI', 'Card'];
+  static const List<String> paymentMethods = ['Katha (అరువు)', 'UPI'];
   static const List<String> fulfillmentTypes = ['Delivery', 'Pickup'];
 }
 

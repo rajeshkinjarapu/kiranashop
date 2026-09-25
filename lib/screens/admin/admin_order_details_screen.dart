@@ -22,7 +22,7 @@ class AdminOrderDetailsScreen extends StatelessWidget {
   }
 
   Future<void> _setStatus(BuildContext context, String status) async {
-    await context.read<OrderProvider>().updateStatus(order.id, status);
+    await context.read<OrderProvider>().updateStatus(order, status);
     if (context.mounted) Navigator.of(context).pop();
   }
 

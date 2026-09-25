@@ -66,8 +66,8 @@ class OrderProvider extends ChangeNotifier {
 
   Future<String> placeOrder(OrderModel order) => _service.placeOrder(order);
 
-  Future<void> updateStatus(String orderId, String status) =>
-      _service.updateOrderStatus(orderId, status);
+  Future<void> updateStatus(OrderModel order, String status) =>
+      _service.updateOrderStatus(order, status);
 
   // ---------- Admin dashboard helpers ----------
 

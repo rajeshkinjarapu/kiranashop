@@ -27,16 +27,34 @@ class NetworkImageBox extends StatelessWidget {
       child: Icon(Icons.image_outlined, color: Colors.grey.shade400),
     );
 
-    Widget child = url.isEmpty
-        ? placeholder
-        : CachedNetworkImage(
-            imageUrl: url,
-            width: width,
-            height: height,
-            fit: fit,
-            placeholder: (_, _) => placeholder,
-            errorWidget: (_, _, _) => placeholder,
-          );
+    Widget child;
+    
+    if (url.isEmpty) {
+      child = placeholder;
+    } else if (url.startsWith('data:image/')) {
+      try {
+        final base64Str = url.split(',').last;
+        final bytes = Uri.parse('data:image/jpeg;base64,$base64Str').data!.contentAsBytes();
+        child = Image.memory(
+          bytes,
+          width: width,
+          height: height,
+          fit: fit,
+          errorBuilder: (_, __, ___) => placeholder,
+        );
+      } catch (e) {
+        child = placeholder;
+      }
+    } else {
+      child = CachedNetworkImage(
+        imageUrl: url,
+        width: width,
+        height: height,
+        fit: fit,
+        placeholder: (_, _) => placeholder,
+        errorWidget: (_, _, _) => placeholder,
+      );
+    }
 
     if (borderRadius != null) {
       child = ClipRRect(borderRadius: borderRadius!, child: child);

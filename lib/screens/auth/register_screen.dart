@@ -17,18 +17,22 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _nameController;
   late final TextEditingController _phoneController;
+  late final TextEditingController _passwordController;
+  bool _obscurePassword = true;
 
   @override
   void initState() {
     super.initState();
     _nameController = TextEditingController();
     _phoneController = TextEditingController(text: widget.initialPhone ?? '');
+    _passwordController = TextEditingController();
   }
 
   @override
   void dispose() {
     _nameController.dispose();
     _phoneController.dispose();
+    _passwordController.dispose();
     super.dispose();
   }
 
@@ -38,6 +42,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     final ok = await auth.register(
       _nameController.text.trim(),
       _phoneController.text.trim(),
+      _passwordController.text.trim(),
     );
     if (!mounted) return;
     if (ok) {
@@ -95,6 +100,32 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   validator: (v) {
                     if ((v?.trim().length ?? 0) != 10) {
                       return 'Enter a valid 10-digit mobile number';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _passwordController,
+                  keyboardType: TextInputType.number,
+                  maxLength: 6,
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  obscureText: _obscurePassword,
+                  decoration: InputDecoration(
+                    labelText: 'Password (6 digits)',
+                    counterText: '',
+                    prefixIcon: const Icon(Icons.lock_outline),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                        color: Colors.grey,
+                      ),
+                      onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                    ),
+                  ),
+                  validator: (v) {
+                    if ((v?.trim().length ?? 0) != 6) {
+                      return 'Enter a valid 6-digit password';
                     }
                     return null;
                   },
