@@ -102,28 +102,28 @@ class HomeScreen extends StatelessWidget {
 
 
           // ── Categories ──
-          if (products.categories.isNotEmpty)
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 24, 16, 0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _SectionHeader(
-                      title: 'Shop by Category',
-                      showSeeAll: true,
-                      onTapSeeAll: () => Navigator.of(context).push(
-                        MaterialPageRoute(builder: (_) => CategoriesScreen()),
-                      ),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 24, 16, 0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _SectionHeader(
+                    title: 'Shop by Category',
+                    showSeeAll: true,
+                    onTapSeeAll: () => Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => CategoriesScreen()),
                     ),
-                    const SizedBox(height: 14),
-                    SizedBox(
-                      height: 110,
-                      child: ListView.separated(
-                        scrollDirection: Axis.horizontal,
-                        itemCount: products.categories.length,
-                        separatorBuilder: (_, _) => const SizedBox(width: 14),
-                        itemBuilder: (context, i) {
+                  ),
+                  const SizedBox(height: 14),
+                  SizedBox(
+                    height: 110,
+                    child: ListView.separated(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: products.categories.length > 0 ? products.categories.length : 4,
+                      separatorBuilder: (_, _) => const SizedBox(width: 14),
+                      itemBuilder: (context, i) {
+                        if (products.categories.length > 0) {
                           final cat = products.categories[i];
                           return _CategoryChip(
                             name: cat.name,
@@ -137,13 +137,30 @@ class HomeScreen extends StatelessWidget {
                               ),
                             ),
                           );
-                        },
-                      ),
+                        } else {
+                          final mocks = [
+                            {'name': 'Groceries', 'icon': Icons.shopping_basket_rounded},
+                            {'name': 'Snacks', 'icon': Icons.cookie_rounded},
+                            {'name': 'Beverages', 'icon': Icons.local_drink_rounded},
+                            {'name': 'Household', 'icon': Icons.cleaning_services_rounded},
+                          ];
+                          final mock = mocks[i];
+                          return _CategoryChip(
+                            name: mock['name'] as String,
+                            imageUrl: '',
+                            mockIcon: mock['icon'] as IconData,
+                            onTap: () => Navigator.of(context).push(
+                              MaterialPageRoute(builder: (_) => CategoriesScreen()),
+                            ),
+                          );
+                        }
+                      },
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
+          ),
 
           // ── Popular Products ──
           SliverToBoxAdapter(
@@ -203,7 +220,7 @@ class HomeScreen extends StatelessWidget {
                   (context, i) => _ProductGridCard(
                     product: products.recentProducts[i],
                   ),
-                  childCount: products.recentProducts.length,
+                  childCount: products.recentProducts.length > 3 ? 3 : products.recentProducts.length,
                 ),
               ),
             ),
@@ -503,11 +520,13 @@ class _CategoryChip extends StatelessWidget {
   final String name;
   final String imageUrl;
   final VoidCallback onTap;
+  final IconData? mockIcon;
 
   const _CategoryChip({
     required this.name,
     required this.imageUrl,
     required this.onTap,
+    this.mockIcon,
   });
 
   static const List<Color> _colors = [
@@ -561,7 +580,7 @@ class _CategoryChip extends StatelessWidget {
                       color: color.withValues(alpha: 0.1),
                       shape: BoxShape.circle,
                     ),
-                    child: Icon(Icons.category_rounded, color: color, size: 32),
+                    child: Icon(mockIcon ?? Icons.category_rounded, color: color, size: 32),
                   ),
           ),
           const SizedBox(height: 8),
