@@ -14,6 +14,7 @@ import 'notifications_screen.dart';
 import 'product_list_screen.dart';
 import 'search_screen.dart';
 import 'categories_screen.dart';
+import 'all_categories_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -112,7 +113,7 @@ class HomeScreen extends StatelessWidget {
                     title: 'Shop by Category',
                     showSeeAll: true,
                     onTapSeeAll: () => Navigator.of(context).push(
-                      MaterialPageRoute(builder: (_) => CategoriesScreen()),
+                      MaterialPageRoute(builder: (_) => const AllCategoriesScreen()),
                     ),
                   ),
                   const SizedBox(height: 14),
