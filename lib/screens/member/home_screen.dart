@@ -13,6 +13,7 @@ import '../../widgets/network_image_box.dart';
 import 'notifications_screen.dart';
 import 'product_list_screen.dart';
 import 'search_screen.dart';
+import 'categories_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -38,45 +39,7 @@ class HomeScreen extends StatelessWidget {
             ),
           ),
 
-          // ── Search Bar ──
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-              child: GestureDetector(
-                onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const SearchScreen()),
-                ),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.07),
-                        blurRadius: 14,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(Icons.search_rounded,
-                          color: AppTheme.primary.withValues(alpha: 0.7), size: 22),
-                      const SizedBox(width: 12),
-                      Text(
-                        'Search products...',
-                        style: TextStyle(
-                            color: Colors.grey.shade400,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
+
 
           // ── Fresh Banner ──
           SliverToBoxAdapter(
@@ -155,7 +118,7 @@ class HomeScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 14),
                     SizedBox(
-                      height: 96,
+                      height: 110,
                       child: ListView.separated(
                         scrollDirection: Axis.horizontal,
                         itemCount: products.categories.length,
@@ -559,40 +522,60 @@ class _CategoryChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = _colors[name.hashCode.abs() % _colors.length];
-
+    
+    // Total width roughly fits 4 items per standard phone screen width
     return GestureDetector(
       onTap: onTap,
       child: Column(
         children: [
           Container(
-            width: 62,
-            height: 62,
+            width: 72,
+            height: 72,
+            padding: const EdgeInsets.all(2), // slight padding for inner image
             decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(18),
+              color: Colors.white,
+              shape: BoxShape.circle,
               border: Border.all(
-                  color: color.withValues(alpha: 0.25), width: 1.5),
+                color: color.withValues(alpha: 0.15),
+                width: 1.5,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: color.withValues(alpha: 0.12),
+                  blurRadius: 10,
+                  spreadRadius: 1,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
-            child: imageUrl.isNotEmpty
-                ? ClipRRect(
-                    borderRadius: BorderRadius.circular(16),
+            child: (imageUrl != '')
+                ? ClipOval(
                     child: NetworkImageBox(
-                        url: imageUrl, width: 62, height: 62),
+                      url: imageUrl, 
+                      width: 68, 
+                      height: 68,
+                    ),
                   )
-                : Icon(Icons.category_rounded, color: color, size: 28),
+                : Container(
+                    decoration: BoxDecoration(
+                      color: color.withValues(alpha: 0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(Icons.category_rounded, color: color, size: 32),
+                  ),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 8),
           SizedBox(
-            width: 68,
+            width: 76,
             child: Text(
               name,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.center,
               style: const TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF475569),
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: Color(0xFF1E293B), // Darker text for professional look
               ),
             ),
           ),

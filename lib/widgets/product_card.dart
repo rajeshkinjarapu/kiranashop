@@ -41,7 +41,7 @@ class ProductCard extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
                 style: GoogleFonts.mandali(fontWeight: FontWeight.bold, fontSize: 16, height: 1.2),
               ),
-              if (product.unit.isNotEmpty)
+              if (product.unit != '')
                 Text(
                   product.unit,
                   style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
