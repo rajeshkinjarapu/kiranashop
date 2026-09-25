@@ -46,13 +46,16 @@ class NetworkImageBox extends StatelessWidget {
         child = placeholder;
       }
     } else {
-      child = CachedNetworkImage(
-        imageUrl: url,
+      child = Image.network(
+        url,
         width: width,
         height: height,
         fit: fit,
-        placeholder: (_, _) => placeholder,
-        errorWidget: (_, _, _) => placeholder,
+        errorBuilder: (_, __, ___) => placeholder,
+        loadingBuilder: (context, child, loadingProgress) {
+          if (loadingProgress == null) return child;
+          return placeholder;
+        },
       );
     }
 

@@ -26,12 +26,32 @@ class ProductCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
-                child: Center(
-                  child: NetworkImageBox(
-                    url: product.imageUrl,
-                    width: double.infinity,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
+                child: Stack(
+                  children: [
+                    Center(
+                      child: NetworkImageBox(
+                        url: product.imageUrl,
+                        width: double.infinity,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    if (product.originalPrice != null && product.originalPrice! > product.price)
+                      Positioned(
+                        top: 0,
+                        left: 0,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: Colors.green.shade600,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            '${(((product.originalPrice! - product.price) / product.originalPrice!) * 100).round()}% OFF',
+                            style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
               ),
               const SizedBox(height: 8),
@@ -49,12 +69,28 @@ class ProductCard extends StatelessWidget {
               const SizedBox(height: 6),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Expanded(
-                    child: Text(
-                      formatMoney(product.price),
-                      style: const TextStyle(
-                          fontWeight: FontWeight.bold, fontSize: 14),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (product.originalPrice != null && product.originalPrice! > product.price)
+                          Text(
+                            formatMoney(product.originalPrice!),
+                            style: TextStyle(
+                              decoration: TextDecoration.lineThrough,
+                              color: Colors.grey.shade500,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        Text(
+                          formatMoney(product.price),
+                          style: const TextStyle(
+                              fontWeight: FontWeight.bold, fontSize: 14),
+                        ),
+                      ],
                     ),
                   ),
                   AddToCartButton(product: product),

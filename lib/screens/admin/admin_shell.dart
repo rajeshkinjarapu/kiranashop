@@ -39,104 +39,135 @@ class _AdminShellState extends State<AdminShell> {
     return Scaffold(
       drawer: Drawer(
         backgroundColor: Colors.white,
-        child: SafeArea(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Container(
-                padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
-                color: Colors.blue.shade50.withValues(alpha: 0.5),
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(12),
-                        boxShadow: [
-                          BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 4))
-                        ]
-                      ),
-                      child: Icon(Icons.storefront_rounded, color: Colors.blue.shade700, size: 28),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Text(
-                        shopName,
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w900,
-                          color: Color(0xFF1E293B),
-                          letterSpacing: -0.5,
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 12),
-              Expanded(
-                child: ListView(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  children: [
-                    _buildDrawerItem(icon: Icons.home_rounded, title: 'Home', isSelected: _index == 0, onTap: () {
-                      Navigator.pop(context);
-                      setState(() => _index = 0);
-                    }),
-                    _buildDrawerItem(icon: Icons.people_alt_rounded, title: 'Customers', isSelected: _index == 3, onTap: () {
-                      Navigator.pop(context);
-                      setState(() => _index = 3);
-                    }),
-                    _buildDrawerItem(icon: Icons.inventory_2_rounded, title: 'Products', isSelected: _index == 1, onTap: () {
-                      Navigator.pop(context);
-                      setState(() => _index = 1);
-                    }),
-                    _buildDrawerItem(icon: Icons.shopping_cart_rounded, title: 'Orders', isSelected: _index == 2, onTap: () {
-                      Navigator.pop(context);
-                      setState(() => _index = 2);
-                    }),
-                    _buildDrawerItem(icon: Icons.category_rounded, title: 'Manage Category', onTap: () {
-                      Navigator.pop(context);
-                      Navigator.push(context, MaterialPageRoute(builder: (_) => const CategoriesManageScreen()));
-                    }),
-                    _buildDrawerItem(icon: Icons.person_rounded, title: 'Profile', onTap: () {
-                      Navigator.pop(context);
-                      // Profile can open settings for now
-                      setState(() => _index = 4);
-                    }),
-                    _buildDrawerItem(icon: Icons.assignment_rounded, title: 'Stock Management', onTap: () {
-                      Navigator.pop(context);
-                      // Just navigate to products for now, or build a specific stock screen if it exists.
-                      setState(() => _index = 1); 
-                    }),
-                    _buildDrawerItem(icon: Icons.bar_chart_rounded, title: 'Reports', isSelected: _index == 5, onTap: () {
-                      Navigator.pop(context);
-                      setState(() => _index = 5);
-                    }),
-                    _buildDrawerItem(icon: Icons.settings_rounded, title: 'Settings', isSelected: _index == 4, onTap: () {
-                      Navigator.pop(context);
-                      setState(() => _index = 4);
-                    }),
-                  ],
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: _buildDrawerItem(
-                  icon: Icons.logout_rounded, 
-                  title: 'Logout', 
-                  iconColor: Colors.red.shade400,
-                  textColor: Colors.red.shade600,
-                  onTap: () async {
-                    Navigator.pop(context);
-                    await context.read<AuthProvider>().signOut();
-                  }
-                ),
-              ),
-            ],
+        elevation: 0,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.only(
+            topRight: Radius.circular(24),
+            bottomRight: Radius.circular(24),
           ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Container(
+              padding: const EdgeInsets.fromLTRB(24, 48, 24, 32),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Colors.blue.shade900, Colors.blue.shade600],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: Colors.white.withValues(alpha: 0.3), width: 1.5),
+                    ),
+                    child: const Icon(Icons.storefront_rounded, color: Colors.white, size: 32),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'ADMIN PANEL',
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white70,
+                            letterSpacing: 1.5,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          shopName,
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w900,
+                            color: Colors.white,
+                            letterSpacing: -0.5,
+                            height: 1.2,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                children: [
+                  _buildDrawerItem(icon: Icons.home_rounded, title: 'Home', isSelected: _index == 0, onTap: () {
+                    Navigator.pop(context);
+                    setState(() => _index = 0);
+                  }),
+                  _buildDrawerItem(icon: Icons.people_alt_rounded, title: 'Customers', isSelected: _index == 3, onTap: () {
+                    Navigator.pop(context);
+                    setState(() => _index = 3);
+                  }),
+                  _buildDrawerItem(icon: Icons.inventory_2_rounded, title: 'Products', isSelected: _index == 1, onTap: () {
+                    Navigator.pop(context);
+                    setState(() => _index = 1);
+                  }),
+                  _buildDrawerItem(icon: Icons.shopping_cart_rounded, title: 'Orders', isSelected: _index == 2, onTap: () {
+                    Navigator.pop(context);
+                    setState(() => _index = 2);
+                  }),
+                  _buildDrawerItem(icon: Icons.category_rounded, title: 'Manage Category', onTap: () {
+                    Navigator.pop(context);
+                    Navigator.push(context, MaterialPageRoute(builder: (_) => const CategoriesManageScreen()));
+                  }),
+                  _buildDrawerItem(icon: Icons.person_rounded, title: 'Profile', onTap: () {
+                    Navigator.pop(context);
+                    // Profile can open settings for now
+                    setState(() => _index = 4);
+                  }),
+                  _buildDrawerItem(icon: Icons.assignment_rounded, title: 'Stock Management', onTap: () {
+                    Navigator.pop(context);
+                    // Just navigate to products for now, or build a specific stock screen if it exists.
+                    setState(() => _index = 1); 
+                  }),
+                  _buildDrawerItem(icon: Icons.bar_chart_rounded, title: 'Reports', isSelected: _index == 5, onTap: () {
+                    Navigator.pop(context);
+                    setState(() => _index = 5);
+                  }),
+                  _buildDrawerItem(icon: Icons.settings_rounded, title: 'Settings', isSelected: _index == 4, onTap: () {
+                    Navigator.pop(context);
+                    setState(() => _index = 4);
+                  }),
+                ],
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                boxShadow: [
+                  BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10, offset: const Offset(0, -4)),
+                ],
+              ),
+              child: _buildDrawerItem(
+                icon: Icons.logout_rounded, 
+                title: 'Logout', 
+                iconColor: Colors.red.shade400,
+                textColor: Colors.red.shade600,
+                onTap: () async {
+                  Navigator.pop(context);
+                  await context.read<AuthProvider>().signOut();
+                }
+              ),
+            ),
+          ],
         ),
       ),
       body: IndexedStack(index: _index, children: _screens),
@@ -178,30 +209,55 @@ class _AdminShellState extends State<AdminShell> {
     Color? textColor,
     required VoidCallback onTap,
   }) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 4),
-      decoration: BoxDecoration(
-        color: isSelected ? Colors.blue.shade50 : Colors.transparent,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: ListTile(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        leading: Icon(
-          icon, 
-          color: iconColor ?? (isSelected ? Colors.blue.shade700 : const Color(0xFF475569)),
-          size: 24,
-        ),
-        title: Text(
-          title,
-          style: TextStyle(
-            fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
-            fontSize: 15,
-            color: textColor ?? (isSelected ? Colors.blue.shade900 : const Color(0xFF334155)),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(12),
+          hoverColor: Colors.blue.shade50.withValues(alpha: 0.5),
+          splashColor: Colors.blue.shade100.withValues(alpha: 0.5),
+          highlightColor: Colors.transparent,
+          child: Container(
+            decoration: BoxDecoration(
+              color: isSelected ? Colors.blue.shade50 : Colors.transparent,
+              borderRadius: BorderRadius.circular(12),
+              border: isSelected 
+                  ? Border.all(color: Colors.blue.shade200, width: 1) 
+                  : Border.all(color: Colors.transparent, width: 1),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 4,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: isSelected ? Colors.blue.shade700 : Colors.transparent,
+                    borderRadius: const BorderRadius.horizontal(left: Radius.circular(12)),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Icon(
+                  icon, 
+                  color: iconColor ?? (isSelected ? Colors.blue.shade700 : Colors.blueGrey.shade400),
+                  size: 22,
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Text(
+                    title,
+                    style: TextStyle(
+                      fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                      fontSize: 14,
+                      color: textColor ?? (isSelected ? Colors.blue.shade900 : Colors.blueGrey.shade700),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
-        onTap: onTap,
-        dense: true,
-        horizontalTitleGap: 8,
       ),
     );
   }

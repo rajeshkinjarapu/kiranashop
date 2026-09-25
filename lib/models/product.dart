@@ -7,6 +7,7 @@ class Product {
   final String categoryId;
   final String categoryName;
   final double price;
+  final double? originalPrice;
   final String unit; // e.g. '1 kg', '500 g', '1 L', '1 pc'
   final String imageUrl;
   final int stockQty;
@@ -22,6 +23,7 @@ class Product {
     this.categoryId = '',
     this.categoryName = '',
     required this.price,
+    this.originalPrice,
     this.unit = '',
     this.imageUrl = '',
     this.stockQty = 0,
@@ -40,6 +42,7 @@ class Product {
       categoryId: d['categoryId'] ?? '',
       categoryName: d['categoryName'] ?? '',
       price: (d['price'] ?? 0).toDouble(),
+      originalPrice: d['originalPrice'] != null ? (d['originalPrice']).toDouble() : null,
       unit: d['unit'] ?? '',
       imageUrl: d['imageUrl'] ?? '',
       stockQty: (d['stockQty'] ?? 0) as int,
@@ -56,6 +59,7 @@ class Product {
         'categoryId': categoryId,
         'categoryName': categoryName,
         'price': price,
+        'originalPrice': originalPrice,
         'unit': unit,
         'imageUrl': imageUrl,
         'stockQty': stockQty,
@@ -73,6 +77,7 @@ class Product {
     String? categoryId,
     String? categoryName,
     double? price,
+    double? originalPrice,
     String? unit,
     String? imageUrl,
     int? stockQty,
@@ -87,6 +92,7 @@ class Product {
         categoryId: categoryId ?? this.categoryId,
         categoryName: categoryName ?? this.categoryName,
         price: price ?? this.price,
+        originalPrice: originalPrice ?? this.originalPrice,
         unit: unit ?? this.unit,
         imageUrl: imageUrl ?? this.imageUrl,
         stockQty: stockQty ?? this.stockQty,

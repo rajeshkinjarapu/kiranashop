@@ -55,6 +55,11 @@ class FirestoreService {
       .doc(userId)
       .update({'name': name});
 
+  Future<void> updateUserPassword(String userId, String password) => _db
+      .collection(AppConstants.usersCollection)
+      .doc(userId)
+      .update({'password': password});
+
   Stream<List<AppUser>> membersStream() => _db
       .collection(AppConstants.usersCollection)
       .where('role', isEqualTo: AppConstants.roleMember)

@@ -41,10 +41,46 @@ class ProductDetailsScreen extends StatelessWidget {
                           TextStyle(color: Colors.grey.shade600, fontSize: 14),
                     ),
                   const SizedBox(height: 8),
-                  Text(
-                    formatMoney(product.price),
-                    style: const TextStyle(
-                        fontSize: 22, fontWeight: FontWeight.bold),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        formatMoney(product.price),
+                        style: const TextStyle(
+                            fontSize: 22, fontWeight: FontWeight.bold),
+                      ),
+                      if (product.originalPrice != null && product.originalPrice! > product.price) ...[
+                        const SizedBox(width: 8),
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 2),
+                          child: Text(
+                            formatMoney(product.originalPrice!),
+                            style: TextStyle(
+                                fontSize: 16, 
+                                color: Colors.grey.shade500,
+                                decoration: TextDecoration.lineThrough,
+                                fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 4),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: Colors.green.shade50,
+                              borderRadius: BorderRadius.circular(4),
+                              border: Border.all(color: Colors.green.shade200),
+                            ),
+                            child: Text(
+                              '${(((product.originalPrice! - product.price) / product.originalPrice!) * 100).round()}% OFF',
+                              style: TextStyle(color: Colors.green.shade700, fontSize: 12, fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                   const SizedBox(height: 8),
                   Row(

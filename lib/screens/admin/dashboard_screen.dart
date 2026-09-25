@@ -46,6 +46,7 @@ class DashboardScreen extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
               child: _ProfileStatsCard(
                 adminName: settings.ownerName,
+                adminPhotoUrl: settings.ownerPhotoUrl,
                 todaysSales: orders.todaysSales,
               ),
             ),
@@ -276,10 +277,12 @@ class _DashboardHeader extends StatelessWidget {
 
 class _ProfileStatsCard extends StatelessWidget {
   final String adminName;
+  final String adminPhotoUrl;
   final double todaysSales;
 
   const _ProfileStatsCard({
     required this.adminName,
+    required this.adminPhotoUrl,
     required this.todaysSales,
   });
 
@@ -308,8 +311,18 @@ class _ProfileStatsCard extends StatelessWidget {
             decoration: BoxDecoration(
               color: const Color(0xFF0265DC).withValues(alpha: 0.1),
               shape: BoxShape.circle,
+              image: adminPhotoUrl.isNotEmpty
+                  ? DecorationImage(
+                      image: adminPhotoUrl.startsWith('data:image/')
+                          ? MemoryImage(Uri.parse(adminPhotoUrl).data!.contentAsBytes()) as ImageProvider
+                          : NetworkImage(adminPhotoUrl),
+                      fit: BoxFit.cover,
+                    )
+                  : null,
             ),
-            child: const Icon(Icons.person_rounded, color: Color(0xFF0265DC), size: 32),
+            child: adminPhotoUrl.isEmpty
+                ? const Icon(Icons.person_rounded, color: Color(0xFF0265DC), size: 32)
+                : null,
           ),
           const SizedBox(width: 16),
           Expanded(
