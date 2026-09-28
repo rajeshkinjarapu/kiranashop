@@ -9,6 +9,7 @@ import '../../providers/cart_provider.dart';
 import '../../providers/product_provider.dart';
 import '../../providers/settings_provider.dart';
 import '../../screens/member/product_details_screen.dart';
+import '../../models/offer.dart';
 import '../../widgets/network_image_box.dart';
 import 'notifications_screen.dart';
 import 'product_list_screen.dart';
@@ -42,62 +43,13 @@ class HomeScreen extends StatelessWidget {
 
 
 
-          // ── Fresh Banner ──
+          // ── Offer banners ──
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(16, 20, 16, 0),
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF8DE889), Color(0xFF4ADE80)],
-                    begin: Alignment.centerLeft,
-                    end: Alignment.centerRight,
-                  ),
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.green.withValues(alpha: 0.2),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.4),
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            child: const Text(
-                              '>',
-                              style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.green),
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          const Text(
-                            'Fresh & Healthy\nEveryday',
-                            style: TextStyle(
-                              color: Colors.black87,
-                              fontWeight: FontWeight.w900,
-                              fontSize: 20,
-                              height: 1.2,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const Icon(Icons.shopping_basket_rounded, color: Colors.white, size: 60),
-                  ],
-                ),
-              ),
+              child: products.offers.isEmpty
+                  ? const _DefaultHomeBanner()
+                  : _OffersCarousel(offers: products.offers),
             ),
           ),
 
@@ -412,11 +364,109 @@ class _SectionHeader extends StatelessWidget {
 }
 
 // ──────────────────────────────────────────────
-// Offer Banner
+// Offer banners
 // ──────────────────────────────────────────────
 
+class _DefaultHomeBanner extends StatelessWidget {
+  const _DefaultHomeBanner();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF8DE889), Color(0xFF4ADE80)],
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.green.withValues(alpha: 0.2),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: const Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Fresh & Healthy\nEveryday',
+                  style: TextStyle(
+                    color: Colors.black87,
+                    fontWeight: FontWeight.w900,
+                    fontSize: 20,
+                    height: 1.2,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Icon(Icons.shopping_basket_rounded, color: Colors.white, size: 60),
+        ],
+      ),
+    );
+  }
+}
+
+class _OffersCarousel extends StatefulWidget {
+  final List<Offer> offers;
+
+  const _OffersCarousel({required this.offers});
+
+  @override
+  State<_OffersCarousel> createState() => _OffersCarouselState();
+}
+
+class _OffersCarouselState extends State<_OffersCarousel> {
+  int _page = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    final offers = widget.offers;
+    return Column(
+      children: [
+        SizedBox(
+          height: 160,
+          child: PageView.builder(
+            itemCount: offers.length,
+            onPageChanged: (i) => setState(() => _page = i),
+            itemBuilder: (_, i) => _OfferBanner(offer: offers[i]),
+          ),
+        ),
+        if (offers.length > 1) ...[
+          const SizedBox(height: 10),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: List.generate(
+              offers.length,
+              (i) => Container(
+                width: i == _page ? 16 : 6,
+                height: 6,
+                margin: const EdgeInsets.symmetric(horizontal: 3),
+                decoration: BoxDecoration(
+                  color: i == _page
+                      ? const Color(0xFF10B981)
+                      : Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
 class _OfferBanner extends StatelessWidget {
-  final dynamic offer;
+  final Offer offer;
 
   const _OfferBanner({required this.offer});
 
@@ -432,80 +482,87 @@ class _OfferBanner extends StatelessWidget {
     final idx = offer.title.hashCode.abs() % _gradients.length;
     final colors = _gradients[idx];
 
-    return Container(
-      width: 270,
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: colors,
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: colors.first.withValues(alpha: 0.35),
-            blurRadius: 14,
-            offset: const Offset(0, 5),
-          ),
-        ],
-      ),
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(20),
       child: Stack(
+        fit: StackFit.expand,
         children: [
-          Positioned(
-            right: -20,
-            bottom: -20,
-            child: Container(
-              width: 90,
-              height: 90,
+          if (offer.imageUrl.isNotEmpty)
+            NetworkImageBox(
+              url: offer.imageUrl,
+              width: double.infinity,
+              height: 160,
+              fit: BoxFit.cover,
+            )
+          else
+            DecoratedBox(
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.08),
-                shape: BoxShape.circle,
+                gradient: LinearGradient(
+                  colors: colors,
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
               ),
             ),
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(8),
+          if (offer.imageUrl.isNotEmpty)
+            const DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Color(0x99000000), Color(0x33000000)],
+                  begin: Alignment.bottomLeft,
+                  end: Alignment.topRight,
                 ),
-                child: const Text(
-                  'SPECIAL OFFER',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 10,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 1,
+              ),
+            ),
+          Padding(
+            padding: const EdgeInsets.all(18),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Text(
+                    'SPECIAL OFFER',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 1,
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 10),
-              Text(
-                offer.title,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 18,
-                  fontWeight: FontWeight.w800,
-                  height: 1.2,
-                ),
-              ),
-              if (offer.subtitle.isNotEmpty) ...[
-                const SizedBox(height: 4),
+                const SizedBox(height: 10),
                 Text(
-                  offer.subtitle,
-                  style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.8),
-                    fontSize: 12,
+                  offer.title,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w800,
+                    height: 1.2,
                   ),
                 ),
+                if (offer.subtitle.isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    offer.subtitle,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.85),
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
               ],
-            ],
+            ),
           ),
         ],
       ),

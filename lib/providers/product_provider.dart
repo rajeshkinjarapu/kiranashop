@@ -12,7 +12,7 @@ class ProductProvider extends ChangeNotifier {
 
   List<Category> categories = [];
   List<Product> products = [];
-  List<Offer> offers = [];
+  List<Offer> allOffers = [];
   bool loading = true;
   String searchQuery = '';
 
@@ -34,11 +34,15 @@ class ProductProvider extends ChangeNotifier {
       loading = false;
       notifyListeners();
     });
-    _offerSub = _service.offersStream().listen((data) {
-      offers = data;
+    _offerSub = _service.allOffersStream().listen((data) {
+      allOffers = data;
       notifyListeners();
     }, onError: (_) {});
   }
+
+  /// Active banners for the customer home screen.
+  List<Offer> get offers =>
+      allOffers.where((o) => o.isActive).toList();
 
   List<Product> get activeProducts =>
       products.where((p) => p.isActive).toList();

@@ -140,13 +140,61 @@ class FirestoreService {
   Future<void> updateProductStock(String id, bool inStock) =>
       _db.collection(AppConstants.productsCollection).doc(id).update({'inStock': inStock});
 
+  int _asInt(dynamic v) {
+    if (v is int) return v;
+    if (v is num) return v.toInt();
+    return int.tryParse('$v') ?? 0;
+  }
+
+  Future<void> setProductStockQty(String id, int qty) {
+    final q = qty < 0 ? 0 : qty;
+    return _db.collection(AppConstants.productsCollection).doc(id).update({
+      'stockQty': q,
+      'inStock': q > 0,
+    });
+  }
+
+  Future<void> adjustProductStock(String id, int delta) async {
+    final ref = _db.collection(AppConstants.productsCollection).doc(id);
+    await _db.runTransaction((tx) async {
+      final snap = await tx.get(ref);
+      if (!snap.exists) throw Exception('Product not found');
+      final current = _asInt(snap.data()?['stockQty']);
+      final next = (current + delta).clamp(0, 999999);
+      tx.update(ref, {
+        'stockQty': next,
+        'inStock': next > 0,
+      });
+    });
+  }
+
   // ---------- Offers ----------
 
-  Stream<List<Offer>> offersStream() => _db
+  Stream<List<Offer>> allOffersStream() => _db
       .collection(AppConstants.offersCollection)
-      .where('isActive', isEqualTo: true)
       .snapshots()
-      .map((s) => s.docs.map(Offer.fromDoc).toList());
+      .map((s) {
+        final list = s.docs.map(Offer.fromDoc).toList();
+        list.sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+        return list;
+      });
+
+  Stream<List<Offer>> offersStream() =>
+      allOffersStream().map((list) => list.where((o) => o.isActive).toList());
+
+  Future<void> saveOffer(Offer offer, {String? id}) {
+    final col = _db.collection(AppConstants.offersCollection);
+    if (id == null) return col.add(offer.toMap()).then((_) {});
+    return col.doc(id).set(offer.toMap(), SetOptions(merge: true));
+  }
+
+  Future<void> deleteOffer(String id) =>
+      _db.collection(AppConstants.offersCollection).doc(id).delete();
+
+  Future<void> updateOfferActive(String id, bool isActive) => _db
+      .collection(AppConstants.offersCollection)
+      .doc(id)
+      .update({'isActive': isActive});
 
   // ---------- Orders ----------
 
@@ -166,6 +214,12 @@ class FirestoreService {
     } catch (_) {
       // Stock decrement is best-effort; order is already placed.
     }
+    
+    // Notify admin
+    try {
+      await _sendAdminNotification('New Order!', 'A new order has been placed by a customer. Please check the dashboard.');
+    } catch (_) {}
+
     return ref.id;
   }
 
@@ -203,6 +257,22 @@ class FirestoreService {
     }
     
     await batch.commit();
+
+    // Notify user
+    try {
+      final statusMap = {
+        'accepted': 'Accepted 🚚',
+        'rejected': 'Rejected ❌',
+        'delivered': 'Delivered ✅',
+        'cancelled': 'Cancelled 🚫',
+      };
+      final displayStatus = statusMap[status] ?? status;
+      await _sendUserNotification(
+        order.userId,
+        'Order Update',
+        'Your order #${order.id.substring(0, 6).toUpperCase()} is now $displayStatus.',
+      );
+    } catch (_) {}
   }
 
   // ---------- Addresses ----------
@@ -231,6 +301,39 @@ class FirestoreService {
       .delete();
 
   // ---------- Notifications ----------
+
+  Future<void> _sendAdminNotification(String title, String body) {
+    return _db.collection('admin_notifications').add({
+      'title': title,
+      'body': body,
+      'isRead': false,
+      'createdAt': FieldValue.serverTimestamp(),
+    });
+  }
+
+  Stream<List<NotificationModel>> adminNotificationsStream() => _db
+      .collection('admin_notifications')
+      .orderBy('createdAt', descending: true)
+      .snapshots()
+      .map((s) => s.docs.map(NotificationModel.fromDoc).toList());
+
+  Future<void> markAdminNotificationAsRead(String notificationId) => _db
+      .collection('admin_notifications')
+      .doc(notificationId)
+      .update({'isRead': true});
+
+  Future<void> _sendUserNotification(String userId, String title, String body) {
+    return _db
+        .collection(AppConstants.usersCollection)
+        .doc(userId)
+        .collection('notifications')
+        .add({
+      'title': title,
+      'body': body,
+      'isRead': false,
+      'createdAt': FieldValue.serverTimestamp(),
+    });
+  }
 
   Stream<List<NotificationModel>> notificationsStream(String userId) => _db
       .collection(AppConstants.usersCollection)

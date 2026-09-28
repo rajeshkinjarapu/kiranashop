@@ -13,6 +13,7 @@ import '../member/notifications_screen.dart';
 import 'admin_order_details_screen.dart';
 import 'product_form_screen.dart';
 import 'manage_stock_screen.dart';
+import 'offers_manage_screen.dart';
 import 'admin_reports_screen.dart';
 import 'settings_screen.dart';
 import '../../models/app_user.dart';
@@ -116,6 +117,14 @@ class DashboardScreen extends StatelessWidget {
                           icon: Icons.inventory_rounded,
                           iconColor: const Color(0xFFEF4444), // Red
                           valueColor: const Color(0xFFEF4444),
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const ManageStockScreen(),
+                              ),
+                            );
+                          },
                         ),
                       ),
                     ],
@@ -227,7 +236,7 @@ class _DashboardHeader extends StatelessWidget {
                 ),
               ),
               StreamBuilder<List<NotificationModel>>(
-                stream: FirestoreService().notificationsStream(userId),
+                stream: FirestoreService().adminNotificationsStream(),
                 builder: (context, snapshot) {
                   final notifications = snapshot.data ?? [];
                   final unreadCount = notifications.where((n) => !n.isRead).length;

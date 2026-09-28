@@ -6,6 +6,7 @@ class Offer {
   final String subtitle;
   final String imageUrl;
   final bool isActive;
+  final int sortOrder;
 
   const Offer({
     required this.id,
@@ -13,6 +14,7 @@ class Offer {
     this.subtitle = '',
     this.imageUrl = '',
     this.isActive = true,
+    this.sortOrder = 0,
   });
 
   factory Offer.fromDoc(DocumentSnapshot<Map<String, dynamic>> doc) {
@@ -23,6 +25,9 @@ class Offer {
       subtitle: d['subtitle'] ?? '',
       imageUrl: d['imageUrl'] ?? '',
       isActive: d['isActive'] ?? true,
+      sortOrder: (d['sortOrder'] is int)
+          ? d['sortOrder'] as int
+          : ((d['sortOrder'] as num?)?.toInt() ?? 0),
     );
   }
 
@@ -31,5 +36,6 @@ class Offer {
         'subtitle': subtitle,
         'imageUrl': imageUrl,
         'isActive': isActive,
+        'sortOrder': sortOrder,
       };
 }

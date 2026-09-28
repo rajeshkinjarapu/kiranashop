@@ -9,6 +9,7 @@ import '../../providers/auth_provider.dart';
 import '../../providers/settings_provider.dart';
 import '../../services/storage_service.dart';
 import 'categories_manage_screen.dart';
+import 'offers_manage_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -262,6 +263,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 onTap: () => Navigator.push(
                   context,
                   MaterialPageRoute(builder: (_) => const CategoriesManageScreen()),
+                ),
+              ),
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: const Icon(Icons.local_offer, color: Colors.blueGrey, size: 28),
+                title: const Text('Manage Offers', style: TextStyle(color: Color(0xFF1E293B), fontSize: 16)),
+                subtitle: Text('Home banners customers see', style: TextStyle(color: Colors.grey.shade600, fontSize: 13)),
+                trailing: const Icon(Icons.chevron_right, color: Colors.black54),
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const OffersManageScreen()),
                 ),
               ),
               const SizedBox(height: 32),

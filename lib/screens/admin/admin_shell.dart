@@ -10,6 +10,8 @@ import 'products_screen.dart';
 import 'settings_screen.dart';
 import 'admin_reports_screen.dart';
 import 'categories_manage_screen.dart';
+import 'manage_stock_screen.dart';
+import 'offers_manage_screen.dart';
 import '../../providers/settings_provider.dart';
 
 class AdminShell extends StatefulWidget {
@@ -101,6 +103,10 @@ class _AdminShellState extends State<AdminShell> {
                       Navigator.pop(context);
                       Navigator.push(context, MaterialPageRoute(builder: (_) => const CategoriesManageScreen()));
                     }),
+                    _buildDrawerItem(icon: Icons.local_offer_rounded, title: 'Manage Offers', onTap: () {
+                      Navigator.pop(context);
+                      Navigator.push(context, MaterialPageRoute(builder: (_) => const OffersManageScreen()));
+                    }),
                     _buildDrawerItem(icon: Icons.person_rounded, title: 'Profile', onTap: () {
                       Navigator.pop(context);
                       // Profile can open settings for now
@@ -108,8 +114,7 @@ class _AdminShellState extends State<AdminShell> {
                     }),
                     _buildDrawerItem(icon: Icons.assignment_rounded, title: 'Stock Management', onTap: () {
                       Navigator.pop(context);
-                      // Just navigate to products for now, or build a specific stock screen if it exists.
-                      setState(() => _index = 1); 
+                      Navigator.push(context, MaterialPageRoute(builder: (_) => const ManageStockScreen()));
                     }),
                     _buildDrawerItem(icon: Icons.bar_chart_rounded, title: 'Reports', isSelected: _index == 5, onTap: () {
                       Navigator.pop(context);
