@@ -11,6 +11,7 @@ import '../../models/product.dart';
 import '../../providers/product_provider.dart';
 import '../../services/download_service.dart';
 import '../../services/firestore_service.dart';
+import '../../services/web_file_picker_service.dart';
 
 class ParsedImportProduct {
   final String name;
@@ -228,25 +229,41 @@ class _BulkProductImportScreenState extends State<BulkProductImportScreen> {
 
   Future<void> _pickAndParseFile() async {
     try {
-      final result = await FilePicker.platform.pickFiles(
-        type: FileType.custom,
-        allowedExtensions: ['xlsx', 'xls', 'csv'],
-        withData: true,
-      );
+      List<int>? bytes;
+      String filename = '';
+      String extension = '';
 
-      if (result == null || result.files.isEmpty) return;
+      if (kIsWeb) {
+        final result = await pickFileWeb(['xlsx', 'xls', 'csv']);
+        if (result == null) return;
+        bytes = result['bytes'] as List<int>;
+        filename = result['name'] as String;
+      } else {
+        final result = await FilePicker.platform.pickFiles(
+          type: FileType.custom,
+          allowedExtensions: ['xlsx', 'xls', 'csv'],
+          withData: true,
+        );
 
-      final file = result.files.first;
-      final bytes = file.bytes;
-      final extension = (file.extension ?? '').toLowerCase();
+        if (result == null || result.files.isEmpty) return;
+
+        final file = result.files.first;
+        bytes = file.bytes;
+        filename = file.name;
+      }
 
       if (bytes == null) {
         throw Exception('Unable to read file content.');
       }
 
+      final parts = filename.split('.');
+      if (parts.isNotEmpty) {
+        extension = parts.last.toLowerCase();
+      }
+
       setState(() {
         _isParsing = true;
-        _fileName = file.name;
+        _fileName = filename;
         _parsedProducts = [];
       });
 
