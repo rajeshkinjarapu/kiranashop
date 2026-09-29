@@ -36,6 +36,7 @@ class HomeScreen extends StatelessWidget {
             child: _HomeHeader(
               shopName: settings.shopName,
               logoUrl: settings.logoUrl,
+              ownerPhotoUrl: settings.ownerPhotoUrl,
               isOpen: settings.isOpen,
               userName: userName,
             ),
@@ -190,18 +191,22 @@ class HomeScreen extends StatelessWidget {
 class _HomeHeader extends StatelessWidget {
   final String shopName;
   final String logoUrl;
+  final String ownerPhotoUrl;
   final bool isOpen;
   final String userName;
 
   const _HomeHeader({
     required this.shopName,
     required this.logoUrl,
+    this.ownerPhotoUrl = '',
     required this.isOpen,
     required this.userName,
   });
 
   @override
   Widget build(BuildContext context) {
+    final displayPhotoUrl = ownerPhotoUrl.isNotEmpty ? ownerPhotoUrl : logoUrl;
+
     return Container(
       decoration: const BoxDecoration(
         gradient: LinearGradient(
@@ -220,36 +225,35 @@ class _HomeHeader extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Top bar: Logo + Shop name + Notification
+              // Top bar: Logo/Photo + Shop name + Notification
               Row(
                 children: [
-                  // Logo
-                  if (logoUrl.isNotEmpty)
+                  // Owner Photo / Logo
+                  if (displayPhotoUrl.isNotEmpty)
                     Container(
-                      width: 40,
-                      height: 40,
+                      width: 44,
+                      height: 44,
                       decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(10),
+                        shape: BoxShape.circle,
                         border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.3),
-                            width: 1.5),
+                            color: Colors.white.withValues(alpha: 0.5),
+                            width: 2),
                       ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(9),
+                      child: ClipOval(
                         child: NetworkImageBox(
-                            url: logoUrl, width: 40, height: 40),
+                            url: displayPhotoUrl, width: 44, height: 44),
                       ),
                     )
                   else
                     Container(
-                      width: 40,
-                      height: 40,
+                      width: 44,
+                      height: 44,
                       decoration: BoxDecoration(
                         color: Colors.white.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(10),
+                        shape: BoxShape.circle,
                       ),
                       child: const Icon(Icons.store_rounded,
-                          color: Colors.white, size: 20),
+                          color: Colors.white, size: 24),
                     ),
 
                   const SizedBox(width: 10),

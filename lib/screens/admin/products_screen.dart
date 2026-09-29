@@ -7,6 +7,7 @@ import '../../providers/product_provider.dart';
 import '../../services/firestore_service.dart';
 import '../../widgets/empty_state.dart';
 import '../../widgets/network_image_box.dart';
+import 'bulk_product_import_screen.dart';
 import 'categories_manage_screen.dart';
 import 'product_form_screen.dart';
 
@@ -57,6 +58,13 @@ class _ProductsScreenState extends State<ProductsScreen> {
         title: const Text('Products'),
         actions: [
           IconButton(
+            icon: const Icon(Icons.file_upload_outlined, color: Colors.green),
+            tooltip: 'Import Products via Excel / CSV',
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const BulkProductImportScreen()),
+            ),
+          ),
+          IconButton(
             icon: const Icon(Icons.category_outlined),
             tooltip: 'Manage Categories',
             onPressed: () => Navigator.of(context).push(
@@ -66,6 +74,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
+        heroTag: null,
         onPressed: () => Navigator.of(context).push(
           MaterialPageRoute(builder: (_) => const ProductFormScreen()),
         ),
@@ -75,21 +84,56 @@ class _ProductsScreenState extends State<ProductsScreen> {
       body: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-            child: TextField(
-              decoration: InputDecoration(
-                hintText: 'Search products...',
-                hintStyle: TextStyle(color: Colors.grey.shade400),
-                prefixIcon: const Icon(Icons.search, color: Colors.blueGrey),
-                filled: true,
-                fillColor: Colors.grey.shade100,
-                contentPadding: const EdgeInsets.symmetric(vertical: 0),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide.none,
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    decoration: InputDecoration(
+                      hintText: 'Search products...',
+                      hintStyle: TextStyle(color: Colors.grey.shade400),
+                      prefixIcon: const Icon(Icons.search, color: Colors.blueGrey),
+                      filled: true,
+                      fillColor: Colors.grey.shade100,
+                      contentPadding: const EdgeInsets.symmetric(vertical: 0),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        borderSide: BorderSide.none,
+                      ),
+                    ),
+                    onChanged: (v) => setState(() => _search = v),
+                  ),
                 ),
-              ),
-              onChanged: (v) => setState(() => _search = v),
+                const SizedBox(width: 8),
+                InkWell(
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const BulkProductImportScreen()),
+                  ),
+                  borderRadius: BorderRadius.circular(16),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: Colors.green.shade50,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: Colors.green.shade200),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.description_outlined, color: Colors.green.shade700, size: 20),
+                        const SizedBox(width: 4),
+                        Text(
+                          'Excel Import',
+                          style: TextStyle(
+                            color: Colors.green.shade800,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
           Expanded(

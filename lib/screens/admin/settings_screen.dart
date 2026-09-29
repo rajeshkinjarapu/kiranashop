@@ -5,9 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
 import '../../models/shop_settings.dart';
-import '../../providers/auth_provider.dart';
 import '../../providers/settings_provider.dart';
-import '../../services/storage_service.dart';
 import 'categories_manage_screen.dart';
 import 'offers_manage_screen.dart';
 
@@ -20,7 +18,6 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _storage = StorageService();
   final _picker = ImagePicker();
 
   late final TextEditingController _shopNameCtrl;
@@ -30,11 +27,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
   late final TextEditingController _deliveryCtrl;
   late final TextEditingController _minOrderCtrl;
   late final TextEditingController _upiCtrl;
+  late final TextEditingController _geminiApiKeyCtrl;
 
   bool _isOpen = true;
   bool _saving = false;
+  bool _showApiKey = false; // toggle API key visibility
   bool _initialized = false;
   Uint8List? _pickedLogoBytes;
+  Uint8List? _pickedOwnerPhotoBytes;
 
   @override
   void initState() {
@@ -46,6 +46,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _deliveryCtrl = TextEditingController();
     _minOrderCtrl = TextEditingController();
     _upiCtrl = TextEditingController();
+    _geminiApiKeyCtrl = TextEditingController();
   }
 
   void _initFromSettings(ShopSettings s) {
@@ -58,6 +59,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _deliveryCtrl.text = s.deliveryCharge.toString();
     _minOrderCtrl.text = s.minimumOrder.toString();
     _upiCtrl.text = s.upiId;
+    _geminiApiKeyCtrl.text = s.geminiApiKey;
     _isOpen = s.isOpen;
   }
 
@@ -70,13 +72,27 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _deliveryCtrl.dispose();
     _minOrderCtrl.dispose();
     _upiCtrl.dispose();
+    _geminiApiKeyCtrl.dispose();
     super.dispose();
   }
+
+  Future<void> _pickOwnerPhoto() async {
+    final picked = await _picker.pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 384,
+      imageQuality: 60,
+    );
+    if (picked != null) {
+      final bytes = await picked.readAsBytes();
+      setState(() => _pickedOwnerPhotoBytes = bytes);
+    }
+  }
+
   Future<void> _pickLogo() async {
     final picked = await _picker.pickImage(
       source: ImageSource.gallery,
-      maxWidth: 256, // Small size for logo base64
-      imageQuality: 50, // Low quality for base64 storage efficiency
+      maxWidth: 256,
+      imageQuality: 50,
     );
     if (picked != null) {
       final bytes = await picked.readAsBytes();
@@ -94,23 +110,35 @@ class _SettingsScreenState extends State<SettingsScreen> {
         final base64String = base64Encode(_pickedLogoBytes!);
         logoUrl = 'data:image/jpeg;base64,$base64String';
       }
+
+      String ownerPhotoUrl = current.ownerPhotoUrl;
+      if (_pickedOwnerPhotoBytes != null) {
+        final base64String = base64Encode(_pickedOwnerPhotoBytes!);
+        ownerPhotoUrl = 'data:image/jpeg;base64,$base64String';
+      }
+
       if (!mounted) return;
 
       final settings = ShopSettings(
         shopName: _shopNameCtrl.text.trim(),
         ownerName: _ownerNameCtrl.text.trim(),
         logoUrl: logoUrl,
+        ownerPhotoUrl: ownerPhotoUrl,
         address: _addressCtrl.text.trim(),
         phone: '+91${_phoneCtrl.text.trim()}',
         deliveryCharge: double.tryParse(_deliveryCtrl.text.trim()) ?? 0,
         minimumOrder: double.tryParse(_minOrderCtrl.text.trim()) ?? 0,
         upiId: _upiCtrl.text.trim(),
+        geminiApiKey: _geminiApiKeyCtrl.text.trim(),
         isOpen: _isOpen,
       );
       await context.read<SettingsProvider>().save(settings);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Settings saved')),
+          const SnackBar(
+            content: Text('Settings & Photos saved successfully!'),
+            backgroundColor: Colors.green,
+          ),
         );
       }
     } catch (e) {
@@ -124,18 +152,39 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
+  ImageProvider? _getImageProvider(Uint8List? pickedBytes, String networkOrDataUrl) {
+    if (pickedBytes != null) {
+      return MemoryImage(pickedBytes);
+    }
+    if (networkOrDataUrl.isNotEmpty) {
+      if (networkOrDataUrl.startsWith('data:image/')) {
+        try {
+          return MemoryImage(Uri.parse(networkOrDataUrl).data!.contentAsBytes());
+        } catch (_) {
+          return null;
+        }
+      } else {
+        return NetworkImage(networkOrDataUrl);
+      }
+    }
+    return null;
+  }
+
   @override
   Widget build(BuildContext context) {
     final settingsProvider = context.watch<SettingsProvider>();
     if (!settingsProvider.loading) {
       _initFromSettings(settingsProvider.settings);
     }
-    final logoUrl = settingsProvider.settings.logoUrl;
+    final currentSettings = settingsProvider.settings;
+
+    final ownerImgProvider = _getImageProvider(_pickedOwnerPhotoBytes, currentSettings.ownerPhotoUrl);
+    final logoImgProvider = _getImageProvider(_pickedLogoBytes, currentSettings.logoUrl);
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
-        title: const Text('Shop Settings', style: TextStyle(fontWeight: FontWeight.w600)),
+        title: const Text('Shop & Profile Settings', style: TextStyle(fontWeight: FontWeight.w600)),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
@@ -144,43 +193,136 @@ class _SettingsScreenState extends State<SettingsScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Center(
-                child: InkWell(
-                  onTap: _pickLogo,
-                  borderRadius: BorderRadius.circular(50),
-                  child: Container(
-                    width: 88,
-                    height: 88,
-                    decoration: BoxDecoration(
-                      color: Colors.grey.shade200,
-                      shape: BoxShape.circle,
-                      image: _pickedLogoBytes != null
-                          ? DecorationImage(
-                              image: MemoryImage(_pickedLogoBytes!),
-                              fit: BoxFit.cover,
-                            )
-                          : (logoUrl.isNotEmpty
-                              ? DecorationImage(
-                                  image: logoUrl.startsWith('data:image/') 
-                                    ? MemoryImage(Uri.parse(logoUrl).data!.contentAsBytes()) as ImageProvider
-                                    : NetworkImage(logoUrl),
-                                  fit: BoxFit.cover,
-                                )
-                              : null),
+              // ── PHOTO UPLOAD SECTION (Owner Photo & Shop Logo) ──
+              Container(
+                padding: const EdgeInsets.all(18),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.04),
+                      blurRadius: 10,
+                      offset: const Offset(0, 3),
                     ),
-                    child: _pickedLogoBytes == null && logoUrl.isEmpty
-                        ? Icon(Icons.add_a_photo_outlined,
-                            color: Colors.grey.shade400, size: 36)
-                        : null,
-                  ),
+                  ],
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    // 1. OWNER / PERSONAL PHOTO
+                    Column(
+                      children: [
+                        Stack(
+                          children: [
+                            InkWell(
+                              onTap: _pickOwnerPhoto,
+                              borderRadius: BorderRadius.circular(50),
+                              child: Container(
+                                width: 92,
+                                height: 92,
+                                decoration: BoxDecoration(
+                                  color: Colors.blue.shade50,
+                                  shape: BoxShape.circle,
+                                  border: Border.all(color: Colors.blue.shade700, width: 2.5),
+                                  image: ownerImgProvider != null
+                                      ? DecorationImage(
+                                          image: ownerImgProvider,
+                                          fit: BoxFit.cover,
+                                        )
+                                      : null,
+                                ),
+                                child: ownerImgProvider == null
+                                    ? Icon(Icons.person_rounded,
+                                        color: Colors.blue.shade300, size: 48)
+                                    : null,
+                              ),
+                            ),
+                            Positioned(
+                              bottom: 0,
+                              right: 0,
+                              child: GestureDetector(
+                                onTap: _pickOwnerPhoto,
+                                child: Container(
+                                  padding: const EdgeInsets.all(6),
+                                  decoration: const BoxDecoration(
+                                    color: Color(0xFF0265DC),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(Icons.camera_alt, color: Colors.white, size: 16),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        const Text(
+                          'Owner Photo',
+                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                        ),
+                      ],
+                    ),
+
+                    Container(height: 80, width: 1, color: Colors.grey.shade200),
+
+                    // 2. SHOP LOGO
+                    Column(
+                      children: [
+                        Stack(
+                          children: [
+                            InkWell(
+                              onTap: _pickLogo,
+                              borderRadius: BorderRadius.circular(50),
+                              child: Container(
+                                width: 92,
+                                height: 92,
+                                decoration: BoxDecoration(
+                                  color: Colors.grey.shade100,
+                                  shape: BoxShape.circle,
+                                  border: Border.all(color: Colors.grey.shade300, width: 2),
+                                  image: logoImgProvider != null
+                                      ? DecorationImage(
+                                          image: logoImgProvider,
+                                          fit: BoxFit.cover,
+                                        )
+                                      : null,
+                                ),
+                                child: logoImgProvider == null
+                                    ? Icon(Icons.storefront_rounded,
+                                        color: Colors.grey.shade400, size: 44)
+                                    : null,
+                              ),
+                            ),
+                            Positioned(
+                              bottom: 0,
+                              right: 0,
+                              child: GestureDetector(
+                                onTap: _pickLogo,
+                                child: Container(
+                                  padding: const EdgeInsets.all(6),
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey.shade800,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(Icons.edit, color: Colors.white, size: 16),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        const Text(
+                          'Shop Logo',
+                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 8),
-              const Center(
-                  child: Text('Shop Logo',
-                      style: TextStyle(color: Colors.grey, fontSize: 13))),
-              const SizedBox(height: 32),
-              
+
+              const SizedBox(height: 24),
+
               _buildTextField(
                 controller: _shopNameCtrl,
                 label: 'Shop Name',
@@ -233,68 +375,92 @@ class _SettingsScreenState extends State<SettingsScreen> {
               const SizedBox(height: 16),
               _buildTextField(
                 controller: _upiCtrl,
-                label: 'UPI ID',
+                label: 'UPI ID (e.g. 9502924437@ybl)',
               ),
-              const SizedBox(height: 24),
-              
+              const SizedBox(height: 16),
+              _buildTextField(
+                controller: _geminiApiKeyCtrl,
+                label: 'Gemini AI API Key (for Auto Product Filling)',
+                obscureText: !_showApiKey,
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    _showApiKey ? Icons.visibility_off : Icons.visibility,
+                    color: Colors.grey,
+                    size: 20,
+                  ),
+                  tooltip: _showApiKey ? 'Hide key' : 'Show key',
+                  onPressed: () => setState(() => _showApiKey = !_showApiKey),
+                ),
+              ),
+              const SizedBox(height: 20),
+
               SwitchListTile(
                 contentPadding: EdgeInsets.zero,
                 activeColor: const Color(0xFF1E3A8A),
-                title: const Text('Shop Open', style: TextStyle(color: Color(0xFF1E293B), fontSize: 16)),
+                title: const Text('Shop Open', style: TextStyle(color: Color(0xFF1E293B), fontSize: 16, fontWeight: FontWeight.w600)),
                 subtitle: Text(
                   _isOpen ? 'Customers can place orders' : 'Ordering is paused',
-                  style: TextStyle(color: Colors.grey.shade600, fontSize: 13)
+                  style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
                 ),
                 value: _isOpen,
                 onChanged: (v) => setState(() => _isOpen = v),
               ),
+
+              const SizedBox(height: 24),
+              const Divider(height: 32),
               
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                child: Divider(color: Colors.grey.shade300, height: 1),
-              ),
-              
+              // ── CATEGORIES & OFFERS SHORTCUTS ──
               ListTile(
                 contentPadding: EdgeInsets.zero,
-                leading: const Icon(Icons.category, color: Colors.blueGrey, size: 28),
-                title: const Text('Manage Categories', style: TextStyle(color: Color(0xFF1E293B), fontSize: 16)),
-                subtitle: Text('Add or edit product categories', style: TextStyle(color: Colors.grey.shade600, fontSize: 13)),
-                trailing: const Icon(Icons.chevron_right, color: Colors.black54),
-                onTap: () => Navigator.push(
-                  context,
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(color: Colors.blue.shade50, borderRadius: BorderRadius.circular(8)),
+                  child: const Icon(Icons.category_outlined, color: Colors.blue),
+                ),
+                title: const Text('Manage Categories', style: TextStyle(fontWeight: FontWeight.w600)),
+                subtitle: const Text('Add, edit, or reorder item categories', style: TextStyle(fontSize: 12)),
+                trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                onTap: () => Navigator.of(context).push(
                   MaterialPageRoute(builder: (_) => const CategoriesManageScreen()),
                 ),
               ),
+              const SizedBox(height: 8),
               ListTile(
                 contentPadding: EdgeInsets.zero,
-                leading: const Icon(Icons.local_offer, color: Colors.blueGrey, size: 28),
-                title: const Text('Manage Offers', style: TextStyle(color: Color(0xFF1E293B), fontSize: 16)),
-                subtitle: Text('Home banners customers see', style: TextStyle(color: Colors.grey.shade600, fontSize: 13)),
-                trailing: const Icon(Icons.chevron_right, color: Colors.black54),
-                onTap: () => Navigator.push(
-                  context,
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(color: Colors.orange.shade50, borderRadius: BorderRadius.circular(8)),
+                  child: const Icon(Icons.local_offer_outlined, color: Colors.orange),
+                ),
+                title: const Text('Manage Offers & Banners', style: TextStyle(fontWeight: FontWeight.w600)),
+                subtitle: const Text('Create promotional banners on home screen', style: TextStyle(fontSize: 12)),
+                trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                onTap: () => Navigator.of(context).push(
                   MaterialPageRoute(builder: (_) => const OffersManageScreen()),
                 ),
               ),
+
               const SizedBox(height: 32),
-              
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF1E3A8A),
+                  backgroundColor: const Color(0xFF0265DC),
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  elevation: 0,
                 ),
                 onPressed: _saving ? null : _save,
                 child: _saving
                     ? const SizedBox(
-                        height: 20,
                         width: 20,
+                        height: 20,
                         child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                       )
-                    : const Text('Save Settings', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                    : const Text(
+                        'Save Settings & Photo',
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      ),
               ),
+              const SizedBox(height: 40),
             ],
           ),
         ),
@@ -305,30 +471,30 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget _buildTextField({
     required TextEditingController controller,
     required String label,
-    int maxLines = 1,
     String? prefixText,
     TextInputType? keyboardType,
     List<TextInputFormatter>? inputFormatters,
     int? maxLength,
+    int maxLines = 1,
     String? Function(String?)? validator,
+    bool obscureText = false,
+    Widget? suffixIcon,
   }) {
     return TextFormField(
       controller: controller,
-      maxLines: maxLines,
       keyboardType: keyboardType,
       inputFormatters: inputFormatters,
       maxLength: maxLength,
+      maxLines: maxLines,
       validator: validator,
-      style: const TextStyle(fontSize: 15, color: Color(0xFF1E293B)),
+      obscureText: obscureText,
       decoration: InputDecoration(
         labelText: label,
         prefixText: prefixText,
         counterText: '',
+        suffixIcon: suffixIcon,
         filled: true,
         fillColor: Colors.white,
-        floatingLabelBehavior: FloatingLabelBehavior.always,
-        labelStyle: TextStyle(color: Colors.grey.shade600),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(color: Colors.grey.shade300),
@@ -339,10 +505,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFF1E3A8A), width: 1.5),
+          borderSide: const BorderSide(color: Color(0xFF0265DC), width: 1.5),
         ),
       ),
     );
   }
 }
-

@@ -168,6 +168,7 @@ class _AddressesScreenState extends State<AddressesScreen> {
         centerTitle: true,
       ),
       floatingActionButton: FloatingActionButton.extended(
+        heroTag: 'address_fab',
         onPressed: () => _editAddress(),
         icon: const Icon(Icons.add),
         label: const Text('Add Address', style: TextStyle(fontWeight: FontWeight.bold)),

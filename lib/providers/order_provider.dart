@@ -34,10 +34,16 @@ class OrderProvider extends ChangeNotifier {
   OrderProvider({FirestoreService? service})
       : _service = service ?? FirestoreService();
 
+  String? _activeUserId;
+  bool _isListeningAll = false;
+
   void listenUserOrders(String userId) {
+    if (_activeUserId == userId && _mySub != null) return;
+    _activeUserId = userId;
+    _isListeningAll = false;
     _mySub?.cancel();
+    _allSub?.cancel();
     loading = true;
-    notifyListeners();
     _mySub = _service.userOrdersStream(userId).listen((data) {
       myOrders = data;
       loading = false;
@@ -49,9 +55,12 @@ class OrderProvider extends ChangeNotifier {
   }
 
   void listenAllOrders() {
+    if (_isListeningAll && _allSub != null) return;
+    _isListeningAll = true;
+    _activeUserId = null;
     _allSub?.cancel();
+    _mySub?.cancel();
     loading = true;
-    notifyListeners();
     _allSub = _service.allOrdersStream().listen((data) {
       allOrders = data;
       loading = false;
@@ -84,6 +93,8 @@ class OrderProvider extends ChangeNotifier {
 
   Future<void> updateStatus(OrderModel order, String status) =>
       _service.updateOrderStatus(order, status);
+
+  Future<void> deleteOrder(String orderId) => _service.deleteOrder(orderId);
 
   // ---------- Admin dashboard helpers ----------
 

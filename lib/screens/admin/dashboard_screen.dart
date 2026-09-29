@@ -37,17 +37,27 @@ class DashboardScreen extends StatelessWidget {
           SliverToBoxAdapter(
             child: _DashboardHeader(
               shopName: settings.shopName,
+              logoUrl: settings.logoUrl,
+              ownerPhotoUrl: settings.ownerPhotoUrl,
               userId: auth.user?.id ?? '',
             ),
           ),
 
-          // ── Profile Stats Card ──
+          // ── Profile & Total Sales Section ──
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
-              child: _ProfileStatsCard(
-                adminName: settings.ownerName,
-                todaysSales: orders.todaysSales,
+              child: Column(
+                children: [
+                  _OwnerProfileCard(
+                    adminName: settings.ownerName,
+                    ownerPhotoUrl: settings.ownerPhotoUrl.isNotEmpty ? settings.ownerPhotoUrl : settings.logoUrl,
+                  ),
+                  const SizedBox(height: 14),
+                  _TodaysSalesCard(
+                    todaysSales: orders.todaysSales,
+                  ),
+                ],
               ),
             ),
           ),
@@ -202,14 +212,32 @@ class DashboardScreen extends StatelessWidget {
 
 // ──────────────── Top Header ────────────────
 
+// ──────────────── Top Header ────────────────
+
 class _DashboardHeader extends StatelessWidget {
   final String shopName;
+  final String logoUrl;
+  final String ownerPhotoUrl;
   final String userId;
 
   const _DashboardHeader({
     required this.shopName,
+    this.logoUrl = '',
+    this.ownerPhotoUrl = '',
     required this.userId,
   });
+
+  ImageProvider? _getImageProvider(String url) {
+    if (url.isEmpty) return null;
+    if (url.startsWith('data:image/')) {
+      try {
+        return MemoryImage(Uri.parse(url).data!.contentAsBytes());
+      } catch (_) {
+        return null;
+      }
+    }
+    return NetworkImage(url);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -226,13 +254,17 @@ class _DashboardHeader extends StatelessWidget {
                 icon: const Icon(Icons.menu_rounded, color: Colors.white, size: 28),
                 onPressed: () => Scaffold.of(context).openDrawer(),
               ),
-              Text(
-                shopName.toUpperCase(),
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 20,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 0.5,
+              Expanded(
+                child: Text(
+                  shopName.toUpperCase(),
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 0.5,
+                  ),
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
               StreamBuilder<List<NotificationModel>>(
@@ -281,29 +313,43 @@ class _DashboardHeader extends StatelessWidget {
   }
 }
 
-// ──────────────── Profile Stats Card ────────────────
+// ──────────────── Profile & Total Sales Cards ────────────────
 
-class _ProfileStatsCard extends StatelessWidget {
+class _OwnerProfileCard extends StatelessWidget {
   final String adminName;
-  final double todaysSales;
+  final String ownerPhotoUrl;
 
-  const _ProfileStatsCard({
+  const _OwnerProfileCard({
     required this.adminName,
-    required this.todaysSales,
+    this.ownerPhotoUrl = '',
   });
+
+  ImageProvider? _getImageProvider(String url) {
+    if (url.isEmpty) return null;
+    if (url.startsWith('data:image/')) {
+      try {
+        return MemoryImage(Uri.parse(url).data!.contentAsBytes());
+      } catch (_) {
+        return null;
+      }
+    }
+    return NetworkImage(url);
+  }
 
   @override
   Widget build(BuildContext context) {
+    final photoProvider = _getImageProvider(ownerPhotoUrl);
+
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.black.withValues(alpha: 0.05)),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.blue.shade100, width: 1.2),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 10,
+            color: Colors.blue.shade900.withValues(alpha: 0.05),
+            blurRadius: 14,
             offset: const Offset(0, 4),
           ),
         ],
@@ -311,56 +357,220 @@ class _ProfileStatsCard extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
+          // Stylish rounded square photo frame
           Container(
-            width: 56,
-            height: 56,
+            width: 64,
+            height: 64,
             decoration: BoxDecoration(
-              color: const Color(0xFF0265DC).withValues(alpha: 0.1),
-              shape: BoxShape.circle,
+              color: Colors.blue.shade50,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: Colors.blue.shade600, width: 2),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.08),
+                  blurRadius: 8,
+                  offset: const Offset(0, 3),
+                ),
+              ],
             ),
-            child: const Icon(Icons.person_rounded, color: Color(0xFF0265DC), size: 32),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(14),
+              child: photoProvider != null
+                  ? Image(
+                      image: photoProvider,
+                      fit: BoxFit.cover,
+                      width: 64,
+                      height: 64,
+                    )
+                  : Center(
+                      child: Icon(
+                        Icons.person_rounded,
+                        color: Colors.blue.shade700,
+                        size: 34,
+                      ),
+                    ),
+            ),
           ),
           const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'Welcome',
-                  style: TextStyle(
-                    color: Colors.grey.shade600,
-                    fontSize: 12,
-                  ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Welcome back 👋',
+                      style: TextStyle(
+                        color: Colors.blue.shade800,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 0.3,
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: Colors.blue.shade50,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.storefront_rounded, size: 12, color: Colors.blue.shade700),
+                          const SizedBox(width: 4),
+                          Text(
+                            'Owner',
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.blue.shade800,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
+                const SizedBox(height: 3),
                 Text(
-                  adminName,
+                  adminName.isNotEmpty ? adminName : 'Store Owner',
                   style: const TextStyle(
-                    color: Color(0xFF1E293B),
+                    color: Color(0xFF0F172A),
                     fontSize: 18,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: -0.3,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 6),
-                Container(height: 1, color: Colors.grey.shade200),
-                const SizedBox(height: 6),
-                Text(
-                  'Total Sales Today',
-                  style: TextStyle(
-                    color: Colors.grey.shade600,
-                    fontSize: 11,
-                  ),
-                ),
-                Text(
-                  formatMoney(todaysSales),
-                  style: const TextStyle(
-                    color: Color(0xFF1E293B),
-                    fontSize: 20,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
               ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TodaysSalesCard extends StatelessWidget {
+  final double todaysSales;
+
+  const _TodaysSalesCard({required this.todaysSales});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFF10B981).withValues(alpha: 0.3), width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF10B981).withValues(alpha: 0.08),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 50,
+                height: 50,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [
+                      Color(0xFF10B981),
+                      Color(0xFF059669),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF10B981).withValues(alpha: 0.35),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: const Icon(
+                  Icons.payments_rounded,
+                  color: Colors.white,
+                  size: 26,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Text(
+                        'Total Sales Today',
+                        style: TextStyle(
+                          color: Color(0xFF64748B),
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 0.2,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFECFDF5),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: const Color(0xFFA7F3D0)),
+                        ),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.trending_up_rounded, size: 12, color: Color(0xFF059669)),
+                            SizedBox(width: 2),
+                            Text(
+                              'Live',
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF059669),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    formatMoney(todaysSales),
+                    style: const TextStyle(
+                      color: Color(0xFF0F172A),
+                      fontSize: 24,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: -0.5,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: const BoxDecoration(
+              color: Color(0xFFF1F5F9),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.arrow_forward_ios_rounded,
+              color: Color(0xFF64748B),
+              size: 14,
             ),
           ),
         ],

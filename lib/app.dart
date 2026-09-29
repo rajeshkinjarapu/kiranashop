@@ -44,12 +44,17 @@ class RootRouter extends StatelessWidget {
             body: Center(child: CircularProgressIndicator()),
           );
         }
-        final orders = context.read<OrderProvider>();
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          final orders = context.read<OrderProvider>();
+          if (user.isAdmin) {
+            orders.listenAllOrders();
+          } else {
+            orders.listenUserOrders(user.id);
+          }
+        });
         if (user.isAdmin) {
-          orders.listenAllOrders();
           return const AdminShell();
         } else {
-          orders.listenUserOrders(user.id);
           return const MemberShell();
         }
     }

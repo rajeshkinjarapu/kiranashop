@@ -190,6 +190,7 @@ class _MembersListScreenState extends State<MembersListScreen> {
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
+        heroTag: 'members_list_fab',
         onPressed: () => _showAddCustomerDialog(context),
         icon: const Icon(Icons.person_add_rounded, color: Colors.white),
         label: const Text('Add Customer', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),

@@ -147,6 +147,7 @@ class _CategoriesManageScreenState extends State<CategoriesManageScreen> {
         elevation: 0,
       ),
       floatingActionButton: FloatingActionButton.extended(
+        heroTag: 'categories_manage_fab',
         onPressed: () => _editCategory(),
         elevation: 4,
         icon: const Icon(Icons.add),

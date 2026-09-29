@@ -4,6 +4,8 @@ import '../../core/formatters.dart';
 import '../../models/order_model.dart';
 import '../../widgets/network_image_box.dart';
 import '../../widgets/order_status_chip.dart';
+import '../../widgets/thermal_bill_receipt.dart';
+import '../common/thermal_receipt_screen.dart';
 
 class OrderDetailsScreen extends StatelessWidget {
   final OrderModel order;
@@ -13,7 +15,16 @@ class OrderDetailsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Order Details')),
+      appBar: AppBar(
+        title: const Text('Order Details'),
+        actions: [
+          IconButton(
+            tooltip: 'Print Bill / Receipt',
+            icon: const Icon(Icons.print_rounded),
+            onPressed: () => ThermalReceiptScreen.show(context, order, initialCopy: ReceiptCopyType.customer),
+          ),
+        ],
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -34,7 +45,60 @@ class OrderDetailsScreen extends StatelessWidget {
             ),
             Text(formatDateTime(order.createdAt),
                 style: TextStyle(color: Colors.grey.shade600, fontSize: 13)),
+            const SizedBox(height: 14),
+
+            // QUICK PRINT THERMAL RECEIPT CARD
+            InkWell(
+              borderRadius: BorderRadius.circular(12),
+              onTap: () => ThermalReceiptScreen.show(context, order, initialCopy: ReceiptCopyType.customer),
+              child: Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Colors.blue.shade700, Colors.blue.shade900],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.blue.withValues(alpha: 0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
+                ),
+                child: const Row(
+                  children: [
+                    Icon(Icons.receipt_long_rounded, color: Colors.white, size: 30),
+                    SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'View & Print Thermal Bill 🖨️',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 15,
+                            ),
+                          ),
+                          SizedBox(height: 2),
+                          Text(
+                            'Bluetooth Receipt (Customer & Shop Copy)',
+                            style: TextStyle(color: Colors.white70, fontSize: 12),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Icon(Icons.arrow_forward_ios_rounded, color: Colors.white70, size: 16),
+                  ],
+                ),
+              ),
+            ),
             const SizedBox(height: 16),
+
             const Text('Items',
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
             const SizedBox(height: 8),
@@ -111,7 +175,24 @@ class OrderDetailsScreen extends StatelessWidget {
                 ),
               ),
             ),
+            const SizedBox(height: 20),
           ],
+        ),
+      ),
+      bottomNavigationBar: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+          child: ElevatedButton.icon(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF1E88E5),
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            onPressed: () => ThermalReceiptScreen.show(context, order, initialCopy: ReceiptCopyType.customer),
+            icon: const Icon(Icons.print_rounded),
+            label: const Text('Print Bill Receipt', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+          ),
         ),
       ),
     );

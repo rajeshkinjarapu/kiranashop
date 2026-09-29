@@ -35,8 +35,21 @@ class _AdminShellState extends State<AdminShell> {
 
   @override
   Widget build(BuildContext context) {
+    final settings = context.watch<SettingsProvider>().settings;
     final pending = context.watch<OrderProvider>().pendingOrdersCount;
-    final shopName = context.watch<SettingsProvider>().settings.shopName;
+    final shopName = settings.shopName;
+    final photoUrl = settings.ownerPhotoUrl.isNotEmpty ? settings.ownerPhotoUrl : settings.logoUrl;
+
+    ImageProvider? drawerImgProvider;
+    if (photoUrl.isNotEmpty) {
+      if (photoUrl.startsWith('data:image/')) {
+        try {
+          drawerImgProvider = MemoryImage(Uri.parse(photoUrl).data!.contentAsBytes());
+        } catch (_) {}
+      } else {
+        drawerImgProvider = NetworkImage(photoUrl);
+      }
+    }
 
     return Scaffold(
       drawer: Drawer(
@@ -51,28 +64,51 @@ class _AdminShellState extends State<AdminShell> {
                 child: Row(
                   children: [
                     Container(
-                      padding: const EdgeInsets.all(8),
+                      width: 50,
+                      height: 50,
                       decoration: BoxDecoration(
                         color: Colors.white,
-                        borderRadius: BorderRadius.circular(12),
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.blue.shade700, width: 1.5),
+                        image: drawerImgProvider != null
+                            ? DecorationImage(image: drawerImgProvider, fit: BoxFit.cover)
+                            : null,
                         boxShadow: [
                           BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 4))
-                        ]
+                        ],
                       ),
-                      child: Icon(Icons.storefront_rounded, color: Colors.blue.shade700, size: 28),
+                      child: drawerImgProvider == null
+                          ? Icon(Icons.storefront_rounded, color: Colors.blue.shade700, size: 28)
+                          : null,
                     ),
                     const SizedBox(width: 16),
                     Expanded(
-                      child: Text(
-                        shopName,
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w900,
-                          color: Color(0xFF1E293B),
-                          letterSpacing: -0.5,
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            shopName,
+                            style: const TextStyle(
+                              fontSize: 17,
+                              fontWeight: FontWeight.w900,
+                              color: Color(0xFF1E293B),
+                              letterSpacing: -0.5,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          if (settings.ownerName.isNotEmpty)
+                            Text(
+                              settings.ownerName,
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey.shade600,
+                                fontWeight: FontWeight.w500,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                        ],
                       ),
                     ),
                   ],

@@ -4,22 +4,26 @@ class ShopSettings {
   final String shopName;
   final String ownerName;
   final String logoUrl;
+  final String ownerPhotoUrl;
   final String address;
   final String phone;
   final double deliveryCharge;
   final double minimumOrder;
   final String upiId;
+  final String geminiApiKey;
   final bool isOpen;
 
   const ShopSettings({
     this.shopName = 'Kirana Shop',
     this.ownerName = 'Shop Owner',
     this.logoUrl = '',
+    this.ownerPhotoUrl = '',
     this.address = '',
     this.phone = '',
     this.deliveryCharge = 0,
     this.minimumOrder = 0,
     this.upiId = '',
+    this.geminiApiKey = '',
     this.isOpen = true,
   });
 
@@ -30,11 +34,13 @@ class ShopSettings {
       shopName: d['shopName'] ?? 'Kirana Shop',
       ownerName: d['ownerName'] ?? 'Shop Owner',
       logoUrl: d['logoUrl'] ?? '',
+      ownerPhotoUrl: d['ownerPhotoUrl'] ?? d['ownerPhoto'] ?? '',
       address: d['address'] ?? '',
       phone: d['phone'] ?? '',
       deliveryCharge: (d['deliveryCharge'] ?? 0).toDouble(),
       minimumOrder: (d['minimumOrder'] ?? 0).toDouble(),
       upiId: d['upiId'] ?? '',
+      geminiApiKey: d['geminiApiKey'] ?? '',
       isOpen: d['isOpen'] ?? true,
     );
   }
@@ -43,11 +49,13 @@ class ShopSettings {
         'shopName': shopName,
         'ownerName': ownerName,
         'logoUrl': logoUrl,
+        'ownerPhotoUrl': ownerPhotoUrl,
         'address': address,
         'phone': phone,
         'deliveryCharge': deliveryCharge,
         'minimumOrder': minimumOrder,
         'upiId': upiId,
+        'geminiApiKey': geminiApiKey,
         'isOpen': isOpen,
       };
 }

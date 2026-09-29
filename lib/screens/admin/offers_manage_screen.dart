@@ -63,6 +63,7 @@ class _OffersManageScreenState extends State<OffersManageScreen> {
         foregroundColor: Colors.white,
       ),
       floatingActionButton: FloatingActionButton.extended(
+        heroTag: 'offers_manage_fab',
         onPressed: () => _openForm(),
         icon: const Icon(Icons.add),
         label: const Text('Add Offer'),

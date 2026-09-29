@@ -106,7 +106,25 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       cart.clear();
       if (!mounted) return;
       Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (_) => OrderSuccessScreen(orderId: orderId)),
+        MaterialPageRoute(
+          builder: (_) => OrderSuccessScreen(
+            order: OrderModel(
+              id: orderId,
+              userId: order.userId,
+              customerName: order.customerName,
+              customerPhone: order.customerPhone,
+              address: order.address,
+              fulfillmentType: order.fulfillmentType,
+              paymentMethod: order.paymentMethod,
+              items: order.items,
+              subtotal: order.subtotal,
+              deliveryCharge: order.deliveryCharge,
+              total: order.total,
+              status: order.status,
+              createdAt: DateTime.now(),
+            ),
+          ),
+        ),
         (route) => route.isFirst,
       );
     } catch (e) {

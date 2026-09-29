@@ -66,7 +66,27 @@ class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
                             '${order.customerName} • ${formatDateTime(order.createdAt)}\n${order.totalQty} items • ${formatMoney(order.total)}',
                           ),
                           isThreeLine: true,
-                          trailing: OrderStatusChip(status: order.status),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              OrderStatusChip(status: order.status),
+                              const SizedBox(width: 4),
+                              IconButton(
+                                icon: const Icon(Icons.print_rounded, size: 20, color: Colors.blueGrey),
+                                tooltip: 'Print Thermal Bill',
+                                onPressed: () => Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (_) => AdminOrderDetailsScreen(order: order),
+                                  ),
+                                ),
+                              ),
+                              IconButton(
+                                icon: Icon(Icons.delete_outline_rounded, size: 20, color: Colors.red.shade400),
+                                tooltip: 'Delete Order',
+                                onPressed: () => _confirmDeleteOrder(context, order.id),
+                              ),
+                            ],
+                          ),
                           onTap: () => Navigator.of(context).push(
                             MaterialPageRoute(
                               builder: (_) =>
@@ -81,6 +101,54 @@ class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
         ],
       ),
     );
+  }
+
+  Future<void> _confirmDeleteOrder(BuildContext context, String orderId) async {
+    final shortId = orderId.length > 6 ? orderId.substring(0, 6).toUpperCase() : orderId.toUpperCase();
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete Order'),
+        content: Text('Are you sure you want to delete Order #$shortId? This action cannot be undone.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && context.mounted) {
+      try {
+        await context.read<OrderProvider>().deleteOrder(orderId);
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Order #$shortId deleted successfully'),
+              backgroundColor: Colors.red.shade700,
+            ),
+          );
+        }
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Failed to delete order: $e'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    }
   }
 
   Widget _filterChip(String value, String label) {

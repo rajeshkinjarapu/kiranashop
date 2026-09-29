@@ -243,7 +243,7 @@ class FirestoreService {
     final orderRef = _db.collection(AppConstants.ordersCollection).doc(order.id);
     batch.update(orderRef, {'status': status});
     
-    if (order.status == 'new' && status == 'accepted' && order.paymentMethod == 'Katha (అరువు)') {
+    if (order.status == 'new' && status == 'accepted' && order.paymentMethod.contains('Katha')) {
       final userRef = _db.collection(AppConstants.usersCollection).doc(order.userId);
       batch.update(userRef, {'kathaBalance': FieldValue.increment(order.total)});
       
@@ -273,6 +273,10 @@ class FirestoreService {
         'Your order #${order.id.substring(0, 6).toUpperCase()} is now $displayStatus.',
       );
     } catch (_) {}
+  }
+
+  Future<void> deleteOrder(String orderId) async {
+    await _db.collection(AppConstants.ordersCollection).doc(orderId).delete();
   }
 
   // ---------- Addresses ----------

@@ -9,6 +9,7 @@ import 'providers/cart_provider.dart';
 import 'providers/order_provider.dart';
 import 'providers/product_provider.dart';
 import 'providers/settings_provider.dart';
+import 'services/firestore_service.dart';
 import 'services/notification_service.dart';
 
 Future<void> main() async {
@@ -21,6 +22,7 @@ Future<void> main() async {
   runApp(
     MultiProvider(
       providers: [
+        Provider(create: (_) => FirestoreService()),
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => CartProvider()),
         ChangeNotifierProvider(create: (_) => ProductProvider()),
