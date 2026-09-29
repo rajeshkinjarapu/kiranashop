@@ -210,17 +210,9 @@ Respond ONLY in valid JSON format like this:
       } else {
         final p = Uri.encodeComponent("Professional product photography of $englishName grocery item, high quality, isolated on white background, studio lighting");
         final pUrl = 'https://image.pollinations.ai/prompt/$p?width=512&height=512&nologo=true';
-        
-        // Fetch bytes using a reliable proxy (AllOrigins) to avoid Cloudflare/CORS blocks on Web
-        final proxyUrl = Uri.parse('https://api.allorigins.win/raw?url=${Uri.encodeComponent(pUrl)}');
-        final pResp = await http.get(proxyUrl);
-        
-        if (pResp.statusCode == 200) {
-          _pickedImageBytes = pResp.bodyBytes;
-          _existingImageUrl = ''; // clear old url
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Pollinations Error ${pResp.statusCode} (Proxy failed)')));
-        }
+        // Set URL directly; NetworkImageBox handles it natively via Image.network on web
+        _existingImageUrl = pUrl;
+        _pickedImageBytes = null;
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('AI Error: $e')));

@@ -4,6 +4,7 @@ import '../../core/formatters.dart';
 import '../../models/order_model.dart';
 import '../../widgets/network_image_box.dart';
 import '../../widgets/order_status_chip.dart';
+import '../shared/receipt_screen.dart';
 
 class OrderDetailsScreen extends StatelessWidget {
   final OrderModel order;
@@ -13,7 +14,21 @@ class OrderDetailsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Order Details')),
+      appBar: AppBar(
+        title: const Text('Order Details'),
+        actions: [
+          if (order.status == 'delivered' || order.status == 'ready')
+            IconButton(
+              icon: const Icon(Icons.receipt_long),
+              tooltip: 'View Receipt',
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => ReceiptScreen(order: order)),
+                );
+              },
+            ),
+        ],
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(

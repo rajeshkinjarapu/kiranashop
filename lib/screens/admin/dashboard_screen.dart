@@ -210,7 +210,7 @@ class _DashboardHeader extends StatelessWidget {
       child: SafeArea(
         bottom: false,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+          padding: const EdgeInsets.fromLTRB(16, 18, 16, 18), // Increased height
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -306,11 +306,11 @@ class _ProfileStatsCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Container(
-            width: 56,
-            height: 56,
+            width: 72,
+            height: 84, // Make it a vertical rectangle as requested
             decoration: BoxDecoration(
               color: const Color(0xFF0265DC).withValues(alpha: 0.1),
-              shape: BoxShape.circle,
+              borderRadius: BorderRadius.circular(12),
               image: adminPhotoUrl.isNotEmpty
                   ? DecorationImage(
                       image: adminPhotoUrl.startsWith('data:image/')
@@ -321,7 +321,7 @@ class _ProfileStatsCard extends StatelessWidget {
                   : null,
             ),
             child: adminPhotoUrl.isEmpty
-                ? const Icon(Icons.person_rounded, color: Color(0xFF0265DC), size: 32)
+                ? const Icon(Icons.person_rounded, color: Color(0xFF0265DC), size: 36)
                 : null,
           ),
           const SizedBox(width: 16),
@@ -432,7 +432,7 @@ class _StatCard extends StatelessWidget {
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
       child: Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 22), // Increased vertical padding further
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
@@ -466,8 +466,8 @@ class _StatCard extends StatelessWidget {
                   title,
                   style: TextStyle(
                     color: const Color(0xFF1E293B).withValues(alpha: 0.8),
-                    fontSize: 10.5,
-                    fontWeight: FontWeight.w700,
+                    fontSize: 13.0,
+                    fontWeight: FontWeight.bold,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.visible,

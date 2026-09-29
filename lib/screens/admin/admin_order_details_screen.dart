@@ -7,6 +7,7 @@ import '../../models/order_model.dart';
 import '../../providers/order_provider.dart';
 import '../../widgets/network_image_box.dart';
 import '../../widgets/order_status_chip.dart';
+import '../shared/receipt_screen.dart';
 
 class AdminOrderDetailsScreen extends StatelessWidget {
   final OrderModel order;
@@ -23,15 +24,34 @@ class AdminOrderDetailsScreen extends StatelessWidget {
 
   Future<void> _setStatus(BuildContext context, String status) async {
     await context.read<OrderProvider>().updateStatus(order, status);
-    if (context.mounted) Navigator.of(context).pop();
+    // Don't pop the screen automatically, let the user see the updated status
   }
 
   @override
   Widget build(BuildContext context) {
-    final next = _nextStatus(order.status);
+    // Get the latest order state dynamically
+    final latestOrder = context.watch<OrderProvider>().allOrders.firstWhere(
+          (o) => o.id == order.id,
+          orElse: () => order,
+        );
+
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Order Details')),
+      appBar: AppBar(
+        title: const Text('Order Details'),
+        actions: [
+          if (latestOrder.status == 'delivered' || latestOrder.status == 'ready')
+            IconButton(
+              icon: const Icon(Icons.receipt_long),
+              tooltip: 'View Receipt',
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => ReceiptScreen(order: latestOrder)),
+                );
+              },
+            ),
+        ],
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -42,15 +62,15 @@ class AdminOrderDetailsScreen extends StatelessWidget {
               children: [
                 Expanded(
                   child: Text(
-                    'Order #${order.id.length > 6 ? order.id.substring(0, 6).toUpperCase() : order.id.toUpperCase()}',
+                    'Order #${latestOrder.id.length > 6 ? latestOrder.id.substring(0, 6).toUpperCase() : latestOrder.id.toUpperCase()}',
                     style: const TextStyle(
                         fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                 ),
-                OrderStatusChip(status: order.status),
+                OrderStatusChip(status: latestOrder.status),
               ],
             ),
-            Text(formatDateTime(order.createdAt),
+            Text(formatDateTime(latestOrder.createdAt),
                 style: TextStyle(color: Colors.grey.shade600, fontSize: 13)),
             const SizedBox(height: 16),
             Card(
@@ -62,17 +82,17 @@ class AdminOrderDetailsScreen extends StatelessWidget {
                     const Text('Customer',
                         style: TextStyle(fontWeight: FontWeight.bold)),
                     const SizedBox(height: 8),
-                    _infoRow(Icons.person, 'Name', order.customerName),
+                    _infoRow(Icons.person, 'Name', latestOrder.customerName),
                     const SizedBox(height: 6),
-                    _infoRow(Icons.phone, 'Phone', order.customerPhone),
+                    _infoRow(Icons.phone, 'Phone', latestOrder.customerPhone),
                     const SizedBox(height: 6),
-                    _infoRow(Icons.receipt, 'Type', order.fulfillmentType),
-                    if (order.address.isNotEmpty) ...[
+                    _infoRow(Icons.receipt, 'Type', latestOrder.fulfillmentType),
+                    if (latestOrder.address.isNotEmpty) ...[
                       const SizedBox(height: 6),
-                      _infoRow(Icons.location_on, 'Address', order.address),
+                      _infoRow(Icons.location_on, 'Address', latestOrder.address),
                     ],
                     const SizedBox(height: 6),
-                    _infoRow(Icons.payment, 'Payment', order.paymentMethod),
+                    _infoRow(Icons.payment, 'Payment', latestOrder.paymentMethod),
                   ],
                 ),
               ),
@@ -81,7 +101,7 @@ class AdminOrderDetailsScreen extends StatelessWidget {
             const Text('Items',
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
             const SizedBox(height: 8),
-            ...order.items.map(
+            ...latestOrder.items.map(
               (item) => Card(
                 margin: const EdgeInsets.only(bottom: 8),
                 child: Padding(
@@ -123,11 +143,11 @@ class AdminOrderDetailsScreen extends StatelessWidget {
                 padding: const EdgeInsets.all(14),
                 child: Column(
                   children: [
-                    _row('Subtotal', formatMoney(order.subtotal)),
+                    _row('Subtotal', formatMoney(latestOrder.subtotal)),
                     const SizedBox(height: 6),
-                    _row('Delivery charge', formatMoney(order.deliveryCharge)),
+                    _row('Delivery charge', formatMoney(latestOrder.deliveryCharge)),
                     const Divider(height: 20),
-                    _row('Total', formatMoney(order.total), bold: true),
+                    _row('Total', formatMoney(latestOrder.total), bold: true),
                   ],
                 ),
               ),
@@ -137,37 +157,71 @@ class AdminOrderDetailsScreen extends StatelessWidget {
         ),
       ),
       bottomNavigationBar: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.05),
+                blurRadius: 10,
+                offset: const Offset(0, -5),
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              if (order.status == 'new' || order.status == 'accepted')
-                Expanded(
-                  child: OutlinedButton(
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.red,
-                      side: const BorderSide(color: Colors.red),
-                      minimumSize: const Size.fromHeight(48),
+              const Text(
+                'Update Order Status',
+                style: TextStyle(fontSize: 13, color: Colors.grey, fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Expanded(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF1F5F9),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.grey.shade300),
+                      ),
+                      child: DropdownButtonHideUnderline(
+                        child: DropdownButton<String>(
+                          value: latestOrder.status,
+                          isExpanded: true,
+                          icon: const Icon(Icons.arrow_drop_down_rounded, color: Color(0xFF1E3A8A)),
+                          items: [
+                            ...AppConstants.orderStatusFlow.map((status) {
+                              return DropdownMenuItem(
+                                value: status,
+                                child: Text(
+                                  orderStatusLabel(status),
+                                  style: const TextStyle(fontWeight: FontWeight.w600, color: Color(0xFF1E293B)),
+                                ),
+                              );
+                            }),
+                            const DropdownMenuItem(
+                              value: 'cancelled',
+                              child: Text(
+                                'Cancelled',
+                                style: TextStyle(fontWeight: FontWeight.w600, color: Colors.red),
+                              ),
+                            ),
+                          ],
+                          onChanged: (newStatus) {
+                            if (newStatus != null && newStatus != latestOrder.status) {
+                              _setStatus(context, newStatus);
+                            }
+                          },
+                        ),
+                      ),
                     ),
-                    onPressed: () => _setStatus(context, 'cancelled'),
-                    child: const Text('Cancel Order'),
                   ),
-                ),
-              if (next != null) ...[
-                if (order.status == 'new' || order.status == 'accepted')
-                  const SizedBox(width: 12),
-                Expanded(
-                  flex: 2,
-                  child: ElevatedButton(
-                    onPressed: () => _setStatus(context, next),
-                    child: Text(next == 'delivered'
-                        ? (order.fulfillmentType == 'Pickup'
-                            ? 'Mark Picked Up'
-                            : 'Mark Delivered')
-                        : 'Mark ${orderStatusLabel(next)}'),
-                  ),
-                ),
-              ],
+                ],
+              ),
             ],
           ),
         ),

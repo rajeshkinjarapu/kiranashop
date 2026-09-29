@@ -7,6 +7,7 @@ import 'providers/order_provider.dart';
 import 'screens/admin/admin_shell.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/member/member_shell.dart';
+import 'widgets/in_app_notifier.dart';
 
 class KiranaShopApp extends StatelessWidget {
   const KiranaShopApp({super.key});
@@ -17,6 +18,7 @@ class KiranaShopApp extends StatelessWidget {
       title: 'Kirana Shop',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
+      builder: (context, child) => InAppNotifier(child: child!),
       home: const RootRouter(),
     );
   }

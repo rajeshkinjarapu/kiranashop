@@ -215,7 +215,7 @@ class HomeScreen extends StatelessWidget {
                   crossAxisCount: 3,
                   mainAxisSpacing: 10,
                   crossAxisSpacing: 10,
-                  childAspectRatio: 0.65,
+                  childAspectRatio: 0.52,
                 ),
                 delegate: SliverChildBuilderDelegate(
                   (context, i) => _ProductGridCard(
@@ -638,17 +638,18 @@ class _FeaturedProductCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Image
-            ClipRRect(
-              borderRadius:
-                  const BorderRadius.vertical(top: Radius.circular(16)),
-              child: Container(
-                height: 90,
-                width: double.infinity,
-                color: const Color(0xFFF0F4FF),
-                child: NetworkImageBox(
-                  url: product.imageUrl,
+            Expanded(
+              child: ClipRRect(
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(16)),
+                child: Container(
                   width: double.infinity,
-                  height: 90,
+                  color: const Color(0xFFF0F4FF),
+                  child: NetworkImageBox(
+                    url: product.imageUrl,
+                    width: double.infinity,
+                    height: double.infinity,
+                  ),
                 ),
               ),
             ),

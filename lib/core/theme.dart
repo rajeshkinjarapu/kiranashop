@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
   // Professional Deep Blue theme
@@ -17,6 +18,7 @@ class AppTheme {
     return ThemeData(
       useMaterial3: true,
       colorScheme: scheme,
+      textTheme: GoogleFonts.mandaliTextTheme(),
       scaffoldBackgroundColor: background,
       appBarTheme: const AppBarTheme(
         backgroundColor: primary,
